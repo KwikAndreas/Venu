@@ -143,10 +143,10 @@ Format: kerjakan satu checkpoint, verifikasi "Selesai bila", commit, **berhenti 
 - **Selesai bila:** struktur repo ada dan commit awal berhasil.
 
 ### CP1 — Backend dasar + koneksi Neon
-- [ ] Inisialisasi `backend` (`express`, `pg`, `dotenv`, `cors`), sediakan `.env.example`
-- [ ] Endpoint `GET /ping`
-- [ ] Koneksi ke Neon (user mengisi `DATABASE_URL` sendiri di `.env`)
-- [ ] File SQL skema (`backend/db/schema.sql`) dan skrip untuk menjalankannya
+- [x] Inisialisasi `backend` (`express`, `pg`, `dotenv`, `cors`), sediakan `.env.example`
+- [x] Endpoint `GET /ping`
+- [x] Koneksi ke Neon (user mengisi `DATABASE_URL` sendiri di `.env`)
+- [x] File SQL skema (`backend/db/schema.sql`) dan skrip untuk menjalankannya
 - **Selesai bila:** `GET /ping` OK dan semua tabel terbuat di Neon.
 
 ### CP2 — Autentikasi dan peran
@@ -223,3 +223,4 @@ Format: kerjakan satu checkpoint, verifikasi "Selesai bila", commit, **berhenti 
 > Claude Code: tambahkan satu entri per checkpoint selesai (tanggal, ringkasan, keputusan penting).
 
 - **2026-10-27 — CP0 selesai.** Lingkungan: Node v24.1.0, npm 11.4.1, git 2.46.0. Branch `master` diganti `main`. Struktur `backend/`, `web/`, `docs/` dibuat; `.gitignore` mencakup `node_modules`, `.env*` (kecuali `.env.example`), `dist`, `uploads`, log. **Keputusan:** beralih dari JavaScript ke **TypeScript strict + Clean Code** di semua proyek (aturan no. 3 diperbarui); backend memakai ESM (`"type": "module"`) dan dijalankan dengan type stripping Node v24. `web/` memakai template Vite React-TS yang sudah ada. `mobile/` sengaja belum di-commit sampai CP11.
+- **2026-10-27 — CP1 selesai.** Backend TypeScript strict dijalankan langsung oleh Node v24 (`npm run dev` / `start`), plus `typecheck`, `lint` (ESLint + typescript-eslint strict), `format` (Prettier). Struktur: `src/config/env.ts` (validasi env), `src/db/pool.ts`, `src/routes/health.routes.ts`, `src/app.ts`, `src/server.ts`. `GET /ping` OK. `db/schema.sql` (idempotent) + `npm run db:migrate` membuat 6 tabel di Neon branch `main`. **Keputusan:** ID memakai integer identity berurutan (memudahkan demo IDOR); status sebagai `VARCHAR + CHECK` (booking: menunggu/dikonfirmasi/ditolak/dibatalkan/selesai; payment: menunggu/lunas/gagal); kolom tambahan `venues.kota`, `jam_buka`, `jam_tutup`, `fasilitas`, `payments.metode`. Celah yang sudah ditandai: `[VULN-A02]` CORS terbuka (`app.ts`), `[VULN-A06]` tanpa constraint anti-booking-dobel dan penanda `[VULN-A04]` kolom password (`schema.sql`). Koneksi DB memakai `sslmode=verify-full`.
