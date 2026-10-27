@@ -4,6 +4,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
 import { authRouter } from './modules/auth/auth.routes.ts';
 import { healthRouter } from './modules/health/health.routes.ts';
 import { userRouter } from './modules/users/user.routes.ts';
+import { venueRouter } from './modules/venues/venue.routes.ts';
 
 export function createApp(): Express {
   const app = express();
@@ -15,6 +16,7 @@ export function createApp(): Express {
   app.use(healthRouter);
   app.use('/auth', authRouter);
   app.use(userRouter);
+  app.use('/venues', venueRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

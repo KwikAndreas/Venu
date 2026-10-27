@@ -1,8 +1,19 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { HttpError } from '../lib/http-error.ts';
 
+// Kode error PostgreSQL yang berasal dari data kiriman klien, bukan kegagalan server.
+const PG_CLIENT_ERRORS: Record<string, number> = {
+  '23505': 409, // unique_violation
+  '23503': 409, // foreign_key_violation
+  '23514': 400, // check_violation, mis. jam_tutup <= jam_buka
+};
+
 function getStatus(error: unknown): number {
   if (error instanceof HttpError) return error.status;
+  if (error instanceof Error && 'code' in error && typeof error.code === 'string') {
+    const status = PG_CLIENT_ERRORS[error.code];
+    if (status) return status;
+  }
   // Error bawaan Express/body-parser (mis. JSON rusak) membawa properti `status`.
   if (error instanceof Error && 'status' in error && typeof error.status === 'number') {
     return error.status;
