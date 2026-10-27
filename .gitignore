@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets (jangan pernah di-commit)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Upload & log lokal
+uploads/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
