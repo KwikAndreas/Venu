@@ -42,6 +42,15 @@ Palet: **Ivory (utama) · Midnight Navy (sekunder) · Champagne Gold (aksen)**.
 | Danger     | `#B3382C` | Error, batal, hapus                    |
 | Info       | `#2C5282` | Informasi netral                       |
 
+**Tint status (untuk badge)**: latar lembut + teks gelap, kontras teks ≥ 4.5:1. Warna semantik di atas (mis. Warning `#B7791F`) dipakai untuk garis/ikon; untuk **teks** di atas latar terang pakai varian 700 berikut.
+
+| Token       | Latar (50) | Teks (700) | Dipakai untuk                 |
+| ----------- | ---------- | ---------- | ----------------------------- |
+| success     | `#E7F2EC`  | `#22603F`  | Dikonfirmasi, Lunas           |
+| warning     | `#FBF1E0`  | `#7A4D0B`  | Menunggu                      |
+| danger      | `#F9E7E5`  | `#8C2A20`  | Ditolak, Dibatalkan, Gagal    |
+| info / navy | `#E6EDF6` / `#E9EDF3` | Navy 600 `#2C4163` | Selesai, netral |
+
 **Aturan penggunaan (penting):**
 
 - Ivory mendominasi sekitar 60% layar, Navy sekitar 30%, Gold **tidak lebih dari ~10%**.
@@ -199,12 +208,25 @@ Judul memakai letter-spacing normal; label huruf kapital kecil (caption) boleh `
   --color-danger: #b3382c;
   --color-info: #2c5282;
 
+  /* Tint latar + teks gelap untuk badge status */
+  --color-success-50: #e7f2ec;
+  --color-success-700: #22603f;
+  --color-warning-50: #fbf1e0;
+  --color-warning-700: #7a4d0b;
+  --color-danger-50: #f9e7e5;
+  --color-danger-700: #8c2a20;
+  --color-info-50: #e6edf6;
+  --color-navy-50: #e9edf3;
+
   --font-display: "Playfair Display", serif;
   --font-sans: "Inter", system-ui, sans-serif;
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+
+  --shadow-card: 0 1px 2px rgba(15, 27, 45, 0.06);
+  --shadow-raised: 0 8px 24px rgba(15, 27, 45, 0.1);
 }
 
 body {
@@ -222,10 +244,13 @@ theme: {
   extend: {
     colors: {
       ivory: '#F7F4EE', surface: '#FFFFFF',
-      navy: { 900: '#0F1B2D', 800: '#1B2B45', 600: '#2C4163' },
+      navy: { 900: '#0F1B2D', 800: '#1B2B45', 600: '#2C4163', 50: '#E9EDF3' },
       gold: { 500: '#C9A24B', 600: '#A8842F', 300: '#E3C77D', 100: '#F5EBCF' },
       muted: '#5B6574', line: '#E3DDD0',
-      success: '#2F7D5B', warning: '#B7791F', danger: '#B3382C', info: '#2C5282',
+      success: { DEFAULT: '#2F7D5B', 50: '#E7F2EC', 700: '#22603F' },
+      warning: { DEFAULT: '#B7791F', 50: '#FBF1E0', 700: '#7A4D0B' },
+      danger: { DEFAULT: '#B3382C', 50: '#F9E7E5', 700: '#8C2A20' },
+      info: { DEFAULT: '#2C5282', 50: '#E6EDF6' },
     },
     fontFamily: { display: ['PlayfairDisplay_600SemiBold'], sans: ['Inter_400Regular'] },
     borderRadius: { sm: '8px', md: '12px', lg: '16px' },
@@ -239,9 +264,11 @@ theme: {
 
 ## 11. Checklist Visual (sebelum menyelesaikan CP6 / CP11)
 
-- [ ] Komposisi warna kira-kira 60 Ivory / 30 Navy / 10 Gold
-- [ ] Tidak ada teks emas di atas latar terang
-- [ ] Judul memakai Playfair, selain itu Inter
-- [ ] Satu CTA emas utama per layar
-- [ ] Kontras dan ring fokus lolos AA
-- [ ] Tampilan web dan mobile terasa satu keluarga
+Status web (CP6) diperiksa lewat screenshot desktop 1280px dan mobile 390px. Mobile app (CP11) belum dibuat.
+
+- [x] Komposisi warna kira-kira 60 Ivory / 30 Navy / 10 Gold
+- [x] Tidak ada teks emas di atas latar terang (emas di latar terang hanya ikon bintang, garis, latar tombol/badge)
+- [x] Judul memakai Playfair, selain itu Inter
+- [x] Satu CTA emas utama per layar
+- [x] Kontras dan ring fokus lolos AA (teks badge memakai varian 700; ring fokus emas 2px offset 2px)
+- [ ] Tampilan web dan mobile terasa satu keluarga (menunggu CP11)

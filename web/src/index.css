@@ -1,111 +1,119 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import 'tailwindcss';
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* Token desain Venu — sumber: DESIGN.md §10. Ubah di sini, di mobile, dan di DESIGN.md sekaligus. */
+@theme {
+  --color-ivory: #f7f4ee;
+  --color-surface: #ffffff;
+  --color-navy-900: #0f1b2d;
+  --color-navy-800: #1b2b45;
+  --color-navy-600: #2c4163;
+  --color-gold-500: #c9a24b;
+  --color-gold-600: #a8842f;
+  --color-gold-300: #e3c77d;
+  --color-gold-100: #f5ebcf;
+  --color-muted: #5b6574;
+  --color-line: #e3ddd0;
+  --color-success: #2f7d5b;
+  --color-warning: #b7791f;
+  --color-danger: #b3382c;
+  --color-info: #2c5282;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Tint latar + teks gelap untuk badge status (kontras teks >= 4.5:1). */
+  --color-success-50: #e7f2ec;
+  --color-success-700: #22603f;
+  --color-warning-50: #fbf1e0;
+  --color-warning-700: #7a4d0b;
+  --color-danger-50: #f9e7e5;
+  --color-danger-700: #8c2a20;
+  --color-info-50: #e6edf6;
+  --color-navy-50: #e9edf3;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  --font-display: 'Playfair Display', serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 1px 2px rgba(15, 27, 45, 0.06);
+  --shadow-raised: 0 8px 24px rgba(15, 27, 45, 0.1);
+}
+
+@layer base {
+  body {
+    background: var(--color-ivory);
+    color: var(--color-navy-900);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Ring fokus emas 2px dengan offset 2px untuk semua elemen interaktif. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* Skala tipografi DESIGN.md §3: ukuran mobile, lalu ukuran web mulai 768px. */
+@layer components {
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 2rem;
+    line-height: 2.5rem;
+  }
+  .type-h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+  }
+  .type-h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.375rem;
+    line-height: 1.875rem;
+  }
+  .type-h3 {
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.625rem;
+  }
+  .type-caption {
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  @media (width >= 48rem) {
+    .type-display {
+      font-size: 3rem;
+      line-height: 3.5rem;
+    }
+    .type-h1 {
+      font-size: 2.25rem;
+      line-height: 2.75rem;
+    }
+    .type-h2 {
+      font-size: 1.75rem;
+      line-height: 2.25rem;
+    }
+    .type-h3 {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
   }
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+/* DESIGN.md §7: hormati preferensi kurangi gerak. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }

@@ -54,8 +54,8 @@ Dokumen acuan:
 | CP3 | Lapangan: CRUD, pencarian, filter | ✅ Selesai |
 | CP4 | Booking, pembayaran simulasi, upload | ✅ Selesai |
 | CP5 | Dashboard pemilik, admin, ulasan | ✅ Selesai |
-| CP6 | Web UI | ⏳ Berikutnya |
-| CP7 | Bekukan versi Before | ⏳ Belum |
+| CP6 | Web UI | ✅ Selesai |
+| CP7 | Bekukan versi Before | ⏳ Berikutnya |
 | CP8 | Pengujian Before | ⏳ Belum |
 | CP9 | Perbaikan (Secure SDLC) | ⏳ Belum |
 | CP10 | Pengujian After + laporan | ⏳ Belum |
@@ -96,7 +96,15 @@ Venu/
 │   │   ├── app.ts           Menyusun aplikasi Express
 │   │   └── server.ts        Titik masuk server
 │   └── uploads/             File upload (dibuat otomatis, diabaikan Git)
-├── web/                     Frontend React (dikerjakan di CP6)
+├── web/                     Frontend React + Vite + Tailwind
+│   └── src/
+│       ├── auth/            Sesi login (AuthProvider, useAuth) & penjaga rute per peran
+│       ├── components/      UI dasar (ui/), layout, toast, komponen lapangan & booking
+│       ├── hooks/           useApi: ambil data GET dari API
+│       ├── lib/             Klien API, tipe data, format Rupiah/tanggal, aturan booking
+│       ├── pages/           Satu file/folder per halaman
+│       ├── index.css        Token desain (DESIGN.md §10)
+│       └── main.tsx         Daftar rute
 ├── mobile/                  Aplikasi Expo (opsional, CP11)
 ├── docs/                    Laporan dan bukti pengujian
 ├── TASK.md
@@ -202,7 +210,7 @@ Domain `.test` memang khusus untuk pengujian, jadi email ini tidak mungkin milik
 
 ## Menjalankan Web
 
-Frontend sedang disiapkan di **CP6**. Setelah selesai, cara menjalankannya (di folder `web`):
+Backend **harus menyala lebih dulu** (`npm run dev` di folder `backend`). Lalu, di terminal **kedua**:
 
 ```bash
 cd web
@@ -210,7 +218,31 @@ npm install
 npm run dev
 ```
 
-Bagian ini akan diperbarui di CP6.
+Buka http://localhost:5173. Saat development, Vite meneruskan request `/api/...` dan `/uploads/...` ke backend di `http://localhost:4000` (lihat `web/vite.config.ts`), jadi web tidak butuh file `.env`.
+
+### Halaman
+
+| URL | Halaman | Akses |
+|---|---|---|
+| `/` | Beranda (hero + pencarian cepat + lapangan unggulan) | Publik |
+| `/cari` | Cari lapangan dengan filter | Publik |
+| `/lapangan/:id` | Detail lapangan, pilih tanggal & slot, ulasan | Publik (pesan: penyewa) |
+| `/masuk`, `/daftar` | Login & registrasi | Publik |
+| `/booking/:id/bayar` | Checkout: ringkasan, metode bayar, upload bukti | Penyewa |
+| `/riwayat` | Riwayat booking, bayar, batalkan, beri ulasan | Penyewa |
+| `/profil` | Edit profil & ganti password | Login |
+| `/pemilik` | Dashboard: ringkasan, booking masuk, lapangan saya | Pemilik |
+| `/admin` | Panel admin: pengguna, lapangan, log aktivitas | Admin |
+
+### Skrip npm (folder `web`)
+
+| Perintah | Fungsi |
+|---|---|
+| `npm run dev` | Server development dengan hot reload |
+| `npm run build` | Cek tipe lalu build produksi ke `web/dist` |
+| `npm run typecheck` | Cek tipe TypeScript |
+| `npm run lint` | ESLint (termasuk aturan React Hooks) |
+| `npm run format` | Prettier |
 
 ---
 
@@ -301,7 +333,7 @@ Event yang dicatat di log aktivitas: register, login berhasil/gagal, ubah profil
 
 ### 1. Pemeriksaan kode
 
-Jalankan di folder `backend` sebelum commit. Keduanya harus tanpa error:
+Jalankan di folder `backend` **dan** folder `web` sebelum commit. Keduanya harus tanpa error:
 
 ```bash
 npm run typecheck
@@ -414,4 +446,6 @@ Pakai nama file yang sama di `before/` dan `after/` supaya mudah dibandingkan. S
 | `Environment variable DATABASE_URL/JWT_SECRET belum diisi` | `.env` belum dibuat atau belum disimpan. Lihat langkah [Buat file `.env`](#2-buat-file-env) |
 | `EADDRINUSE: address already in use :::4000` | Server lain sudah memakai port 4000. Matikan terminal lama (Ctrl+C) atau ganti `PORT` di `.env` |
 | `ERR_UNKNOWN_FILE_EXTENSION ".ts"` atau error sintaks saat `npm run dev` | Versi Node.js di bawah 24. Perbarui Node.js |
+| Web menampilkan "Tidak dapat terhubung ke server" | Backend belum menyala. Jalankan `npm run dev` di folder `backend` |
+| Web terus kembali ke halaman Masuk | Token di browser sudah tidak berlaku (mis. `JWT_SECRET` diganti). Masuk ulang |
 | Request ke Neon lambat di awal | Database Neon tidur saat tidak dipakai dan butuh beberapa detik untuk bangun. Coba lagi |
