@@ -69,12 +69,14 @@ booking-lapangan/
 └── docs/      laporan, bukti uji, screenshot
 ```
 
-Branching Git:
-- `main`: dasar dan dokumen.
-- `before`: versi dengan celah disengaja (di-tag `v1-before` saat dibekukan).
-- `after`: versi yang sudah diamankan (di-tag `v2-after`).
+**Versi Before/After memakai saklar mode, bukan branch terpisah** (keputusan user 2026-10-27):
+- Satu kode di branch `main`. Mode dipilih lewat `SECURITY_MODE=before|after` di `backend/.env` dan `VITE_SECURITY_MODE=before|after` di `web/.env` (keduanya harus sama). Kosong = `after`.
+- Setiap celah ditulis berpasangan di lokasi yang sama: cabang `if (isBeforeMode)` bertanda `// [VULN-Axx]`, cabang aman bertanda `// [FIXED-Axx]`.
+- Backend dijalankan langsung tanpa build, jadi kedua cabang ada di kode sumber dan mode dipilih saat runtime. Web dibangun Vite; `VITE_SECURITY_MODE` diganti nilai tetap saat build sehingga cabang mode lain **dibuang dari bundle**.
+- Pengaman mode before: server menolak jalan bila `NODE_ENV=production`, selalu listen di `127.0.0.1`, mencetak peringatan di terminal, dan web menampilkan pita "MODE BEFORE".
+- Tag Git tetap dipakai sebagai arsip laporan: `v1-before` (kode saat pengujian Before dibekukan) dan `v2-after`.
 
-Neon: pakai fitur **database branching**, satu branch database untuk Before dan satu untuk After, agar data uji tidak bertabrakan.
+Neon: pakai fitur **database branching**, satu branch database untuk Before dan satu untuk After (ganti `DATABASE_URL` saat berpindah mode), agar data uji dan format hash password tidak bercampur.
 
 ---
 
@@ -108,9 +110,9 @@ Neon: pakai fitur **database branching**, satu branch database untuk Before dan 
 
 ---
 
-## 7. Katalog Celah Disengaja (hanya di branch `before`)
+## 7. Katalog Celah Disengaja (hanya aktif di `SECURITY_MODE=before`)
 
-Setiap celah **wajib** diberi komentar penanda di kode: `// [VULN-Axx] penjelasan singkat`, supaya mudah dilacak saat pengujian dan perbaikan. Semua celah ini adalah **material pembelajaran**.
+Setiap celah **wajib** diberi komentar penanda di kode: `// [VULN-Axx] penjelasan singkat`, dan perbaikannya di sebelahnya `// [FIXED-Axx] penjelasan singkat`, supaya mudah dilacak saat pengujian dan perbaikan. Semua celah ini adalah **material pembelajaran**.
 
 | ID | OWASP 2025 | Celah yang disengaja (Before) | Perbaikan (After) |
 |---|---|---|---|
@@ -126,7 +128,8 @@ Setiap celah **wajib** diberi komentar penanda di kode: `// [VULN-Axx] penjelasa
 | VULN-A10 | Mishandling of Exceptional Conditions | Error tidak tertangani (crash), pembayaran gagal tetapi status tetap "lunas" (fail open) | Penanganan error terpusat, fail secure, rollback transaksi |
 
 **Aturan keamanan untuk versi Before:**
-- Hanya dijalankan **di komputer lokal** dengan **data dummy**. **Jangan di-deploy ke internet publik.**
+- Hanya dijalankan **di komputer lokal** dengan **data dummy**. **Jangan di-deploy ke internet publik.** (Ditegakkan oleh pengaman mode before: tolak `NODE_ENV=production`, listen hanya di `127.0.0.1`.)
+- Deploy apa pun wajib `SECURITY_MODE=after` dan `VITE_SECURITY_MODE=after` (atau dikosongkan).
 - Jangan pakai password, email, atau data asli siapa pun.
 - Jangan memasukkan kredensial Neon produksi atau pribadi ke dalam kode.
 
@@ -177,8 +180,9 @@ Format: kerjakan satu checkpoint, verifikasi "Selesai bila", commit, **berhenti 
 - **Selesai bila:** seluruh alur bisa dipakai dari browser dan tampilan sesuai `DESIGN.md`.
 
 ### CP7 — Bekukan versi Before
-- [ ] Pastikan semua celah di Bagian 7 ada dan bertanda `[VULN-Axx]`
-- [ ] Merge ke branch `before`, buat tag `v1-before`
+- [x] Saklar `SECURITY_MODE` / `VITE_SECURITY_MODE` + pengaman mode before (dikerjakan lebih awal, 2026-10-27)
+- [ ] Pastikan semua celah di Bagian 7 ada dan bertanda `[VULN-Axx]` (aktif saat `SECURITY_MODE=before`)
+- [ ] Buat tag `v1-before`
 - [ ] Buat branch database Neon khusus Before
 - **Selesai bila:** tag `v1-before` ada dan checklist celah lengkap 10 kategori.
 
@@ -188,10 +192,9 @@ Format: kerjakan satu checkpoint, verifikasi "Selesai bila", commit, **berhenti 
 - [ ] Isi tabel temuan (kategori, lokasi, cara uji, bukti, tingkat risiko)
 - **Selesai bila:** `docs/before/` berisi bukti untuk 10 kategori.
 
-### CP9 — Penerapan Secure Application Development (branch `after`)
-- [ ] Buat branch `after` dari `v1-before`
+### CP9 — Penerapan Secure Application Development (mode `after`)
 - [ ] Dokumentasikan tahap SDLC aman di `docs/sad-process.md`: requirements keamanan, threat modeling sederhana (STRIDE + diagram alur data), secure coding, verifikasi (SAST/DAST/dependency check), konfigurasi aman
-- [ ] Perbaiki seluruh celah sesuai katalog, hapus komentar `[VULN-Axx]` atau ganti jadi `[FIXED-Axx]`
+- [ ] Setiap `[VULN-Axx]` punya pasangan `[FIXED-Axx]` yang aktif saat `SECURITY_MODE=after` (sebagian sudah dikerjakan bersama saklar mode: A01 registrasi, A02, A04, A07)
 - **Selesai bila:** semua celah di katalog punya perbaikan dan commit-nya terhubung ke ID-nya.
 
 ### CP10 — Pengujian After dan Laporan
@@ -230,3 +233,4 @@ Format: kerjakan satu checkpoint, verifikasi "Selesai bila", commit, **berhenti 
 - **2026-10-27 — CP5 selesai.** Modul baru `owner`, `admin`, `reviews`, `audit`; edit profil di `users`. Endpoint: `PATCH /me`, `PUT /me/password` (wajib password lama); `GET /owner/stats` (periode default 30 hari: jumlah booking, menunggu, terkonfirmasi, pendapatan dari pembayaran lunas, okupansi jam terpakai/jam tersedia, per lapangan), `GET /owner/bookings`, `POST /owner/bookings/:id/confirm` (wajib ada bukti bayar; booking → dikonfirmasi + pembayaran → lunas dalam satu transaksi), `POST /owner/bookings/:id/reject`; `GET/POST /venues/:id/reviews`, `DELETE /reviews/:id`; `GET /admin/summary`, `GET /admin/users`, `PATCH /admin/users/:id/role`, `DELETE /admin/users/:id`, `GET /admin/venues`, `DELETE /admin/venues/:id`, `GET /admin/audit-logs`. **Keputusan:** ulasan hanya oleh penyewa yang punya booking dikonfirmasi/selesai sampai hari ini, satu per lapangan (unique index `uq_reviews_user_venue`); admin tidak bisa mengubah peran/menghapus akunnya sendiri; menghapus lapangan/user ikut menghapus file upload terkait; data lapangan kini memuat `rating_rata` dan `jumlah_ulasan`. Audit log mencatat register, login berhasil/gagal, ubah profil/password, konfirmasi/tolak booking, aksi admin; alert sederhana bila 5 login gagal dari satu IP dalam 15 menit. Refactor: penyusun WHERE terparameter dipindah ke `lib/sql-where.ts`. README diperbarui. 19 skenario diuji via curl; data uji dihapus (audit log uji dibiarkan karena bersifat catatan permanen). **Catatan terbuka:** fitur CP5 dibuat dengan implementasi aman dan audit log sudah aktif, sehingga celah A01/A05 (ulasan)/A02 baru dan A09 (tanpa log) dari katalog **belum ditanam**; gabungkan dengan catatan CP3/CP4 untuk diputuskan kelompok sebelum CP7. Penanda `[VULN-Axx]` yang sudah ada (A01 register, A02, A04, A06 skema, A07) tetap utuh.
 - **2026-10-27 — CP6 selesai.** Web React 19 + Vite 8 + Tailwind v4 + react-router v8 + lucide-react + font Inter/Playfair (`@fontsource`). Token desain di `web/src/index.css` (DESIGN.md §10). 10 rute: `/`, `/cari`, `/lapangan/:id`, `/masuk`, `/daftar`, `/booking/:id/bayar`, `/riwayat`, `/profil`, `/pemilik` (tab Ringkasan / Booking masuk / Lapangan saya), `/admin` (tab Pengguna / Lapangan / Log aktivitas). Komponen bersama: Button, Field (label di atas + error berikon), Badge status (tint + ikon), Modal/ConfirmDialog (wajib sebelum aksi destruktif), Toast 3 detik, Skeleton, EmptyState, Tabs, Table, SlotPicker 44px, VenueCard. **Keputusan:** TypeScript web diturunkan dari 7.0 ke 6.0 (sama dengan backend) karena `typescript-eslint` belum mendukung TS 7; oxlint bawaan template diganti ESLint + Prettier sesuai aturan no. 3; `tsconfig.app.json` dijadikan `strict`; Vite dev proxy `/api` dan `/uploads` → `localhost:4000` (web tidak bergantung pada CORS); token JWT disimpan di `localStorage` (kandidat perbaikan di After: cookie httpOnly); UI menampilkan pesan login generik sesuai DESIGN.md §1 (API Before tetap membocorkan, jadi A07 tetap bisa diuji lewat API); parameter `?next=` divalidasi agar tidak menjadi open redirect; bukti bayar ditampilkan lewat fetch + Blob karena butuh token. Ditambah token tint status (`*-50`, `*-700`) karena teks Warning `#B7791F` di latar terang tidak lolos AA; dicatat di DESIGN.md §2 dan §10. Verifikasi: typecheck, lint, `vite build`, smoke test proxy + 51 modul, dan screenshot 10 halaman × (desktop 1280 / mobile 390) via Chrome headless tanpa error console; satu bug ditemukan dan diperbaiki (tombol Batalkan tampil Navy, kini varian `danger-outline`). Data contoh untuk screenshot sudah dihapus.
 - **2026-10-27 — Revisi CP6: redesign "Night Match".** **Keputusan user:** tampilan lama (Ivory/Navy/Emas + Playfair) terasa generik, diganti gaya sporty "Night Match": dasar gelap Ink/Asphalt, aksen Volt `#C6FF1A`, judul Barlow Condensed 800 (italic untuk display) kapital, isi Barlow, radius kecil 2/4/8px, pola garis diagonal, angka ala papan skor. DESIGN.md ditulis ulang total (token semantik `ink`, `surface`, `surface-2`, `line`, `fg`, `muted`, `volt`, status terang untuk latar gelap). Perubahan tata letak: kartu lapangan seragam diganti daftar "fixture" bernomor; beranda dengan hero display + pemilih olahraga besar + panel papan skor + langkah bernomor; filter pencarian jadi strip horizontal dengan tab olahraga; blok tanggal ala jadwal pertandingan di Riwayat/Checkout; ringkasan booking bergaya tiket; StatCard jadi papan skor (sorotan Volt untuk satu angka terpenting). Varian tombol disederhanakan (`primary`, `secondary`, `danger`, `danger-outline`, `ghost`). Diverifikasi ulang dengan screenshot desktop/mobile tanpa error console.
+- **2026-10-27 — Saklar mode keamanan Before/After.** **Keputusan user:** satu kode dengan saklar `.env`, menggantikan branch `before`/`after` (Bagian 5 dan CP7/CP9 diperbarui). Backend: `SECURITY_MODE=before|after` (kosong = after) di `config/env.ts` + `isBeforeMode`; pengaman: tolak `NODE_ENV=production` di mode before, listen paksa `127.0.0.1`, banner peringatan di terminal; mode after mewajibkan `JWT_SECRET` ≥ 32 karakter. Pasangan `[VULN]`/`[FIXED]` yang dibuat: **A01** peran registrasi (allowlist penyewa/pemilik); **A02** CORS (`CORS_ORIGINS`), header `helmet`, `X-Powered-By` dimatikan (`middleware/security.ts`), error generik tanpa stack + log server (`error-handler.ts`), akun seed tanpa password bawaan (`SEED_PASSWORD` atau acak); **A04** bcrypt cost 12 + rehash otomatis hash MD5 lama saat login, HTTPS wajib di produksi (`trust proxy` + redirect + HSTS); **A07** token 2 jam + `jti`, logout mencabut token (denylist di memori), kebijakan password (8+ huruf & angka, bukan nama email) untuk registrasi dan ganti password, pesan + status + waktu respons login seragam (bcrypt dummy), rate limit login 10/15 menit & registrasi 10/jam per IP. Dependensi baru: `bcryptjs`, `helmet`, `express-rate-limit`. Web: `VITE_SECURITY_MODE` (`lib/security-mode.ts`), pita "MODE BEFORE", pesan login asli API ditampilkan hanya di mode before; terbukti di-build hanya memuat cabang mode yang dipilih. Proxy Vite diarahkan ke `127.0.0.1:4000`. Ditemukan & diperbaiki saat pengembangan: `verifyPassword` menjadi async sehingga pengecekan password lama di ganti-password wajib `await`. Diuji: 21 skenario before vs after via curl + uji rehash MD5→bcrypt; data uji dihapus. **Catatan terbuka (tetap):** celah katalog yang belum punya cabang `[VULN]` (A01 IDOR/SSRF lapangan & booking, A03, A05, A06 harga/booking dobel, A08, A09, A10) masih perlu diputuskan kelompok sebelum CP7.

@@ -1,6 +1,8 @@
 import { Outlet, ScrollRestoration } from 'react-router';
+import { IS_BEFORE_MODE } from '../../lib/security-mode.ts';
 import { Container } from '../ui/Layout.tsx';
 import { Logo, Navbar } from './Navbar.tsx';
+import { SecurityModeBanner } from './SecurityModeBanner.tsx';
 
 function Footer() {
   return (
@@ -36,6 +38,7 @@ export function AppLayout() {
       >
         Lewati ke konten
       </a>
+      {IS_BEFORE_MODE && <SecurityModeBanner />}
       <Navbar />
       <main id="konten" className="flex-1">
         <Outlet />

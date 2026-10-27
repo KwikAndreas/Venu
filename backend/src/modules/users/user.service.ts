@@ -1,5 +1,6 @@
+import { isBeforeMode } from '../../config/env.ts';
 import { HttpError } from '../../lib/http-error.ts';
-import { hashPassword, verifyPassword } from '../../lib/password.ts';
+import { assertStrongPassword, hashPassword, verifyPassword } from '../../lib/password.ts';
 import { recordAudit } from '../audit/audit.service.ts';
 import {
   findUserByEmail,
@@ -46,11 +47,16 @@ export async function changePassword(
 ): Promise<void> {
   const user = await findUserWithPasswordById(userId);
   if (!user) throw new HttpError(404, 'User tidak ditemukan');
-  if (!verifyPassword(passwords.lama, user.password_hash)) {
+  if (!(await verifyPassword(passwords.lama, user.password_hash))) {
     throw new HttpError(400, 'Password lama tidak sesuai');
   }
 
-  // Kebijakan password mengikuti register (lihat [VULN-A07] di auth.service.ts).
-  await updateUserPassword(userId, hashPassword(passwords.baru));
+  if (isBeforeMode) {
+    // [VULN-A07] Tidak ada kebijakan password (sama dengan registrasi mode before).
+  } else {
+    // [FIXED-A07] Password baru wajib memenuhi kebijakan yang sama dengan registrasi.
+    assertStrongPassword(passwords.baru, user.email);
+  }
+  await updateUserPassword(userId, await hashPassword(passwords.baru));
   await recordAudit({ userId, aksi: 'user.ubah_password', ip });
 }

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import express, { type Express } from 'express';
-import cors from 'cors';
 import { UPLOAD_ROOT } from './lib/storage.ts';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
+import { applySecurityMiddleware } from './middleware/security.ts';
 import { adminRouter } from './modules/admin/admin.routes.ts';
 import { authRouter } from './modules/auth/auth.routes.ts';
 import { bookingRouter } from './modules/bookings/booking.routes.ts';
@@ -16,9 +16,8 @@ import { venueRouter } from './modules/venues/venue.routes.ts';
 export function createApp(): Express {
   const app = express();
 
-  // [VULN-A02] CORS terbuka total: origin mana pun boleh memanggil API ini.
-  app.use(cors());
-  app.use(express.json());
+  applySecurityMiddleware(app);
+  app.use(express.json({ limit: '100kb' }));
 
   // Foto lapangan bersifat publik. Bukti bayar (uploads/payments) TIDAK disajikan statis;
   // aksesnya lewat GET /payments/:id/proof yang memeriksa hak akses.

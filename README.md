@@ -4,15 +4,15 @@
 
 Proyek ini adalah tugas kelompok mata kuliah **Secure Application Development**, dengan tema **Asta Cita nomor 4** (penguatan SDM, termasuk prestasi olahraga). Aplikasi diuji dengan **OWASP Top 10:2025** dalam dua versi:
 
-| Versi | Branch Git | Isi |
+| Versi | Cara mengaktifkan | Isi |
 |---|---|---|
-| **Before** | `before` (tag `v1-before`) | Dibuat tanpa praktik keamanan, berisi celah yang **disengaja** dan ditandai `[VULN-Axx]` di kode |
-| **After** | `after` (tag `v2-after`) | Celah diperbaiki dengan Secure Application Development, ditandai `[FIXED-Axx]` |
+| **Before** | `SECURITY_MODE=before` (backend) + `VITE_SECURITY_MODE=before` (web) | Tanpa praktik keamanan, celah **disengaja** aktif. Ditandai `[VULN-Axx]` di kode |
+| **After** | `SECURITY_MODE=after` + `VITE_SECURITY_MODE=after` (atau dikosongkan) | Celah diperbaiki dengan Secure Application Development. Ditandai `[FIXED-Axx]` |
 
-Hasil kedua versi dibandingkan secara terukur untuk melihat dampak praktik keamanan.
+Kedua versi ada di **satu kode** dan dipilih lewat file `.env`, lihat [Mode keamanan Before/After](#mode-keamanan-beforeafter). Hasil kedua versi dibandingkan secara terukur untuk melihat dampak praktik keamanan.
 
 > [!WARNING]
-> **Versi Before sengaja tidak aman.** Jalankan hanya di komputer lokal dengan data dummy. **Jangan di-deploy ke internet**, jangan memakai password atau data asli, dan jangan memasukkan kredensial apa pun ke dalam kode.
+> **Mode Before sengaja tidak aman.** Jalankan hanya di komputer lokal dengan data dummy. **Jangan di-deploy ke internet**, jangan memakai password atau data asli, dan jangan memasukkan kredensial apa pun ke dalam kode. Server sendiri menolak berjalan di mode before bila `NODE_ENV=production`.
 
 Dokumen acuan:
 - [TASK.md](TASK.md): rencana kerja, checkpoint, katalog celah, dan progress log (sumber kebenaran)
@@ -29,10 +29,11 @@ Dokumen acuan:
 5. [Prasyarat](#prasyarat)
 6. [Menjalankan Backend](#menjalankan-backend)
 7. [Menjalankan Web](#menjalankan-web)
-8. [Ringkasan API](#ringkasan-api)
-9. [Pengujian](#pengujian)
-10. [Konvensi Pengembangan](#konvensi-pengembangan)
-11. [Troubleshooting](#troubleshooting)
+8. [Mode keamanan Before/After](#mode-keamanan-beforeafter)
+9. [Ringkasan API](#ringkasan-api)
+10. [Pengujian](#pengujian)
+11. [Konvensi Pengembangan](#konvensi-pengembangan)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -159,9 +160,13 @@ Lalu buka `backend/.env` dan isi:
 
 | Variabel | Isi |
 |---|---|
+| `SECURITY_MODE` | `before` atau `after` (kosong = `after`). Lihat [Mode keamanan](#mode-keamanan-beforeafter) |
 | `PORT` | Port server, default `4000` |
 | `DATABASE_URL` | Connection string Neon: **Dashboard → Connect → Connection string**. Ganti `sslmode=require` menjadi `sslmode=verify-full` |
-| `JWT_SECRET` | String acak panjang. Buat dengan perintah di bawah |
+| `JWT_SECRET` | String acak panjang (mode after: minimal 32 karakter). Buat dengan perintah di bawah |
+| `CORS_ORIGINS` | Mode after: origin web yang boleh memanggil API, default `http://localhost:5173` |
+| `HOST` | Mode after: alamat yang didengar, default `127.0.0.1` (pakai `0.0.0.0` saat deploy). Mode before selalu `127.0.0.1` |
+| `SEED_PASSWORD` | Mode after: password akun seed. Kosong = dibuat acak dan ditampilkan sekali saat `db:seed` |
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
@@ -199,12 +204,14 @@ Buka http://localhost:4000/ping. Kalau muncul `{"status":"ok","message":"pong"}`
 
 ### Akun dummy
 
-| Email | Password | Peran |
+| Email | Password (mode before) | Peran |
 |---|---|---|
 | `admin@venu.test` | `admin123` | admin |
 | `pemilik@venu.test` | `pemilik123` | pemilik (pemilik 9 lapangan dummy) |
 | `penyewa1@venu.test` | `penyewa123` | penyewa |
 | `penyewa2@venu.test` | `penyewa123` | penyewa |
+
+Password di atas hanya dipakai bila `db:seed` dijalankan dalam **mode before** (celah A02: akun default). Dalam **mode after**, password diambil dari `SEED_PASSWORD` atau dibuat acak dan dicetak sekali di terminal. Seed tidak menimpa akun yang sudah ada.
 
 Domain `.test` memang khusus untuk pengujian, jadi email ini tidak mungkin milik siapa pun.
 
@@ -243,6 +250,43 @@ Buka http://localhost:5173. Saat development, Vite meneruskan request `/api/...`
 | `npm run typecheck` | Cek tipe TypeScript |
 | `npm run lint` | ESLint (termasuk aturan React Hooks) |
 | `npm run format` | Prettier |
+
+---
+
+## Mode keamanan Before/After
+
+Satu kode, dua perilaku. Ganti mode cukup dengan mengubah `.env` lalu me-restart server, tanpa `git checkout`.
+
+| File | Variabel | Nilai |
+|---|---|---|
+| `backend/.env` | `SECURITY_MODE` | `before` / `after` (kosong = `after`) |
+| `web/.env` | `VITE_SECURITY_MODE` | `before` / `after` (kosong = `after`). Salin dari `web/.env.example` |
+
+**Samakan kedua nilai.** Contoh pindah ke mode before:
+
+```bash
+# backend/.env
+SECURITY_MODE=before
+
+# web/.env
+VITE_SECURITY_MODE=before
+```
+
+Lalu matikan (Ctrl+C) dan jalankan ulang `npm run dev` di **kedua** folder. Tanda mode aktif:
+- Terminal backend menampilkan `mode BEFORE` beserta kotak peringatan.
+- Web menampilkan pita bergaris kuning "MODE BEFORE" di atas navbar.
+
+**Bagaimana kodenya bekerja**
+- Setiap celah ditulis berpasangan di tempat yang sama: cabang `if (isBeforeMode)` bertanda `// [VULN-Axx]`, cabang aman bertanda `// [FIXED-Axx]`. Cari dengan `git grep -n "VULN-A\|FIXED-A"`.
+- **Backend** dijalankan langsung tanpa build, jadi kedua cabang ada di kode sumber dan mode dipilih saat server menyala.
+- **Web** dibangun Vite. Nilai `VITE_SECURITY_MODE` ditanam saat build, sehingga `npm run build` hanya membawa kode untuk mode yang dipilih; cabang mode lain dibuang dari bundle.
+
+**Pengaman mode before**
+- Server menolak menyala bila `SECURITY_MODE=before` dan `NODE_ENV=production`.
+- Server hanya mendengar di `127.0.0.1`, jadi tidak bisa diakses dari komputer lain di jaringan.
+- Nilai selain `before`/`after` membuat server berhenti dengan pesan error (tidak diam-diam memilih salah satu).
+
+**Saran:** pakai branch database Neon terpisah untuk tiap mode (ganti `DATABASE_URL` saat berpindah). Mode before menyimpan password sebagai MD5. Mode after otomatis mengganti hash MD5 menjadi bcrypt saat pemiliknya login, sehingga satu database yang dipakai bergantian akan berisi campuran format hash.
 
 ---
 
@@ -376,13 +420,13 @@ Kalau ingin memakai curl di PowerShell, tulis `curl.exe`, bukan `curl`. Di beber
 Pengujian dilakukan **dua kali dengan skenario dan tool yang sama persis**: pertama pada versi Before (CP8), lalu pada versi After (CP10).
 
 **Persiapan**
-1. Checkout versi yang akan diuji: `git checkout v1-before` atau `git checkout v2-after`.
-2. Pakai **branch database Neon terpisah** untuk Before dan After supaya data uji tidak tercampur. Buat di Dashboard Neon → **Branches → Create branch**, lalu pakai connection string branch itu di `.env`.
-3. Jalankan `npm run db:migrate`, `npm run db:seed`, dan `npm run dev`.
-4. Lihat semua lokasi celah yang ditandai:
+1. Setel mode yang akan diuji di `backend/.env` dan `web/.env` (lihat [Mode keamanan](#mode-keamanan-beforeafter)). Untuk arsip laporan, kode yang diuji juga ditandai tag Git `v1-before` dan `v2-after`.
+2. Pakai **branch database Neon terpisah** untuk Before dan After supaya data uji tidak tercampur. Buat di Dashboard Neon → **Branches → Create branch**, lalu pakai connection string branch itu di `DATABASE_URL`.
+3. Jalankan `npm run db:migrate`, `npm run db:seed`, dan `npm run dev` **dalam mode yang sama**.
+4. Lihat semua lokasi celah dan perbaikannya:
    ```bash
-   git grep -n "VULN-A"     # versi Before
-   git grep -n "FIXED-A"    # versi After
+   git grep -n "VULN-A"     # cabang mode before
+   git grep -n "FIXED-A"    # cabang mode after
    ```
 
 **Tool dan perintah** (jalankan dari folder root `Venu`, ganti `before` dengan `after` saat menguji versi After):
@@ -433,7 +477,7 @@ Pakai nama file yang sama di `before/` dan `after/` supaya mudah dibandingkan. S
 - **TypeScript strict dan Clean Code:** nama jelas, fungsi kecil dengan satu tugas, tanpa duplikasi, error ditangani eksplisit.
 - Backend dijalankan Node.js dengan *type stripping*, jadi **hindari `enum` dan `namespace`**. Pakai union type, misalnya `'penyewa' | 'pemilik' | 'admin'`. Import file lokal wajib memakai ekstensi `.ts`.
 - **Query SQL selalu terparameter** (`$1`, `$2`, ...). Jangan pernah menggabungkan input ke string SQL, kecuali celah Before yang memang disengaja dan ditandai.
-- Celah Before **wajib** diberi komentar `// [VULN-Axx] penjelasan`. Saat diperbaiki di After, ganti menjadi `// [FIXED-Axx] penjelasan`.
+- Celah Before **wajib** ditulis di dalam cabang `if (isBeforeMode)` dengan komentar `// [VULN-Axx] penjelasan`, dan perbaikannya di cabang lain dengan `// [FIXED-Axx] penjelasan`. Jangan menaruh celah di luar cabang mode.
 - Format pesan commit: `feat(cp5): dashboard pemilik`, `fix(a07): rate limit login`, `docs: README`.
 - **Jangan pernah commit** `.env`, kredensial, connection string, atau isi folder `uploads/`.
 
@@ -447,5 +491,9 @@ Pakai nama file yang sama di `before/` dan `after/` supaya mudah dibandingkan. S
 | `EADDRINUSE: address already in use :::4000` | Server lain sudah memakai port 4000. Matikan terminal lama (Ctrl+C) atau ganti `PORT` di `.env` |
 | `ERR_UNKNOWN_FILE_EXTENSION ".ts"` atau error sintaks saat `npm run dev` | Versi Node.js di bawah 24. Perbarui Node.js |
 | Web menampilkan "Tidak dapat terhubung ke server" | Backend belum menyala. Jalankan `npm run dev` di folder `backend` |
+| Pita "MODE BEFORE" tampil tapi perilaku API seperti mode after (atau sebaliknya) | `SECURITY_MODE` (backend) dan `VITE_SECURITY_MODE` (web) berbeda. Samakan, lalu restart keduanya |
+| `SECURITY_MODE=before dilarang saat NODE_ENV=production` | Pengaman bekerja: mode before hanya untuk lokal. Hapus `NODE_ENV=production` atau pakai mode after |
+| `JWT_SECRET minimal 32 karakter acak di mode after` | Buat ulang `JWT_SECRET` dengan perintah di bagian [Buat file `.env`](#2-buat-file-env) |
+| Login ditolak "Terlalu banyak percobaan login" | Rate limit mode after (10 gagal / 15 menit per IP). Tunggu, atau restart server saat pengembangan |
 | Web terus kembali ke halaman Masuk | Token di browser sudah tidak berlaku (mis. `JWT_SECRET` diganti). Masuk ulang |
 | Request ke Neon lambat di awal | Database Neon tidur saat tidak dipakai dan butuh beberapa detik untuk bangun. Coba lagi |

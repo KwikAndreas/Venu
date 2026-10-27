@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
   id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   nama          VARCHAR(100) NOT NULL,
   email         VARCHAR(255) NOT NULL UNIQUE,
-  -- [VULN-A04] Kolom ini akan diisi hash lemah (MD5) atau plain text di versi Before.
+  -- [VULN-A04] Mode before mengisi kolom ini dengan MD5 tanpa salt; mode after dengan bcrypt
+  -- (lihat src/lib/password.ts). Kedua format dikenali saat login.
   password_hash TEXT         NOT NULL,
   role          VARCHAR(20)  NOT NULL DEFAULT 'penyewa'
                 CHECK (role IN ('penyewa', 'pemilik', 'admin')),

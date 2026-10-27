@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+import { env, isBeforeMode } from '../src/config/env.ts';
 import { pool } from '../src/db/pool.ts';
 import { hashPassword } from '../src/lib/password.ts';
 import type { NewVenue } from '../src/modules/venues/venue.input.ts';
@@ -12,7 +14,8 @@ type SeedUser = {
 
 // Data DUMMY untuk pengembangan lokal. Domain .test memang khusus untuk pengujian.
 const SEED_USERS: SeedUser[] = [
-  // [VULN-A02] Akun default dengan kredensial yang mudah ditebak dan tidak pernah diganti.
+  // [VULN-A02] Mode before: akun default dengan kredensial yang mudah ditebak dan tidak
+  // pernah diganti. Mode after: lihat [FIXED-A02] di seedPasswordFor().
   { nama: 'Admin Venu', email: 'admin@venu.test', password: 'admin123', role: 'admin' },
   { nama: 'Pemilik Demo', email: 'pemilik@venu.test', password: 'pemilik123', role: 'pemilik' },
   { nama: 'Penyewa Satu', email: 'penyewa1@venu.test', password: 'penyewa123', role: 'penyewa' },
@@ -123,18 +126,30 @@ const SEED_VENUES: NewVenue[] = [
   },
 ];
 
+function seedPasswordFor(user: SeedUser): string {
+  if (isBeforeMode) return user.password;
+  // [FIXED-A02] Tidak ada password bawaan yang bisa ditebak: pakai SEED_PASSWORD dari .env,
+  // atau password acak yang hanya ditampilkan sekali di terminal.
+  return env.seedPassword ?? `${randomBytes(9).toString('base64url')}7a`;
+}
+
 async function seedUsers(): Promise<number> {
-  let inserted = 0;
+  const created: { email: string; password: string }[] = [];
   for (const user of SEED_USERS) {
+    const password = seedPasswordFor(user);
     const result = await pool.query(
       `INSERT INTO users (nama, email, password_hash, role)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO NOTHING`,
-      [user.nama, user.email, hashPassword(user.password), user.role],
+      [user.nama, user.email, await hashPassword(password), user.role],
     );
-    inserted += result.rowCount ?? 0;
+    if (result.rowCount) created.push({ email: user.email, password });
   }
-  return inserted;
+  if (!isBeforeMode && created.length > 0 && !env.seedPassword) {
+    console.log('Password akun seed (simpan sekarang, tidak akan ditampilkan lagi):');
+    console.table(created);
+  }
+  return created.length;
 }
 
 /** Mengisi lapangan hanya bila pemilik demo belum punya lapangan (aman dijalankan ulang). */

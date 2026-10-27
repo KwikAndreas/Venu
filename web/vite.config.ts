@@ -2,7 +2,8 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const API_TARGET = 'http://localhost:4000';
+// 127.0.0.1 (bukan localhost): backend mode before hanya mendengar di alamat IPv4 lokal ini.
+const API_TARGET = 'http://127.0.0.1:4000';
 
 // https://vite.dev/config/
 export default defineConfig({

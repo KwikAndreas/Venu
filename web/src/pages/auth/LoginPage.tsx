@@ -3,12 +3,22 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { homePathFor, useAuth } from '../../auth/auth-context.ts';
 import { Button } from '../../components/ui/Button.tsx';
 import { PasswordField, TextField } from '../../components/ui/Field.tsx';
-import { toApiError } from '../../lib/api.ts';
+import { toApiError, type ApiError } from '../../lib/api.ts';
 import { safeNextPath } from '../../lib/navigation.ts';
+import { IS_BEFORE_MODE } from '../../lib/security-mode.ts';
 import { AuthCard, FormError } from './AuthCard.tsx';
 
-// DESIGN.md §1: pesan login generik, tidak membedakan email tidak terdaftar dan password salah.
 const GENERIC_LOGIN_ERROR = 'Email atau password salah.';
+
+function loginErrorMessage(error: ApiError): string {
+  const isCredentialError = error.status === 401 || error.status === 404;
+  if (!isCredentialError) return error.message;
+  // [VULN-A07] Mode before: pesan asli dari API ditampilkan apa adanya, termasuk
+  // "Email tidak terdaftar", sehingga keberadaan email terlihat dari UI.
+  if (IS_BEFORE_MODE) return error.message;
+  // [FIXED-A07] DESIGN.md §1: pesan generik, tidak membedakan email dan password.
+  return GENERIC_LOGIN_ERROR;
+}
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -27,8 +37,7 @@ export function LoginPage() {
       const user = await login(email.trim().toLowerCase(), password);
       navigate(safeNextPath(params.get('next')) ?? homePathFor(user.role), { replace: true });
     } catch (caught) {
-      const apiError = toApiError(caught);
-      setError([401, 404].includes(apiError.status) ? GENERIC_LOGIN_ERROR : apiError.message);
+      setError(loginErrorMessage(toApiError(caught)));
     } finally {
       setSubmitting(false);
     }
