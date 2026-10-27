@@ -1,3 +1,4 @@
+import { isBeforeMode } from '../../config/env.ts';
 import { pool } from '../../db/pool.ts';
 import { createWhereBuilder, likePattern, type WhereBuilder } from '../../lib/sql-where.ts';
 import type { Sport } from '../../types/sport.ts';
@@ -60,7 +61,34 @@ function buildWhere(filter: VenueFilter): WhereBuilder {
   return where;
 }
 
+/**
+ * [VULN-A05] Mode before: nilai pencarian `nama` dan `lokasi` digabung langsung ke string SQL
+ * tanpa parameter, sehingga bisa disisipi SQL injection lewat Burp/ZAP, mis.
+ *   GET /venues?q=' OR '1'='1   atau   q=' UNION SELECT ... --
+ */
+function listVenuesBefore(filter: VenueFilter): Promise<Venue[]> {
+  const conditions: string[] = [];
+  if (filter.jenis) conditions.push(`v.jenis_olahraga = '${filter.jenis}'`);
+  if (filter.nama) conditions.push(`v.nama ILIKE '%${filter.nama}%'`);
+  if (filter.lokasi) {
+    conditions.push(`(v.kota ILIKE '%${filter.lokasi}%' OR v.alamat ILIKE '%${filter.lokasi}%')`);
+  }
+  if (filter.hargaMin) conditions.push(`v.harga_per_jam >= ${filter.hargaMin}`);
+  if (filter.hargaMax) conditions.push(`v.harga_per_jam <= ${filter.hargaMax}`);
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  return pool
+    .query<Venue>(
+      `SELECT ${VENUE_COLUMNS} FROM venues v ${where} ORDER BY ${VENUE_SORTS[filter.urut]}, v.id`,
+    )
+    .then((result) => result.rows);
+}
+
 export async function listVenues(filter: VenueFilter): Promise<Venue[]> {
+  if (isBeforeMode) return listVenuesBefore(filter);
+
+  // [FIXED-A05] Semua nilai pencarian dikirim sebagai parameter ($1, $2, ...), tidak pernah
+  // digabung ke teks SQL, sehingga input apa pun diperlakukan sebagai data, bukan perintah.
   const where = buildWhere(filter);
   const { rows } = await pool.query<Venue>(
     `SELECT ${VENUE_COLUMNS} FROM venues v ${where.clause()}

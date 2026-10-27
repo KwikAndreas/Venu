@@ -13,9 +13,24 @@ import { useApi } from '../../hooks/useApi.ts';
 import { api, toApiError } from '../../lib/api.ts';
 import { hasEnded } from '../../lib/booking-stage.ts';
 import { formatDateTime } from '../../lib/format.ts';
+import { IS_BEFORE_MODE } from '../../lib/security-mode.ts';
 import type { BookingSummary, Review } from '../../lib/types.ts';
 
 const MAX_COMMENT_LENGTH = 1000;
+
+/**
+ * Menampilkan komentar ulasan.
+ * [VULN-A05] Mode before: komentar dirender sebagai HTML mentah lewat dangerouslySetInnerHTML,
+ * sehingga skrip yang disimpan penyewa (mis. <img src=x onerror=alert(document.cookie)>) ikut
+ * dieksekusi di browser pengunjung lain (stored XSS). Backend juga tidak menyaring input ini.
+ * [FIXED-A05] Mode after: komentar dirender sebagai teks biasa; React otomatis meng-escape HTML.
+ */
+function ReviewComment({ komentar }: { komentar: string }) {
+  if (IS_BEFORE_MODE) {
+    return <p className="mt-1.5 text-fg" dangerouslySetInnerHTML={{ __html: komentar }} />;
+  }
+  return <p className="mt-1.5 text-fg">{komentar}</p>;
+}
 
 function ReviewForm({ venueId, onCreated }: { venueId: number; onCreated: () => void }) {
   const { showToast } = useToast();
@@ -138,8 +153,7 @@ export function VenueReviews({ venueId, onChanged }: { venueId: number; onChange
                   <StarDisplay rating={review.rating} />
                   <span className="text-xs text-muted">{formatDateTime(review.created_at)}</span>
                 </div>
-                {/* Komentar ditampilkan sebagai teks biasa; React meng-escape HTML di dalamnya. */}
-                {review.komentar && <p className="mt-1.5 text-fg">{review.komentar}</p>}
+                {review.komentar && <ReviewComment komentar={review.komentar} />}
               </div>
               {canDelete(review) && (
                 <IconAction
