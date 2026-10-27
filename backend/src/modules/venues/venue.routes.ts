@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { HttpError } from '../../lib/http-error.ts';
 import { optionalPositiveInt, parseIdParam, queryValue } from '../../lib/request.ts';
 import { getAuthUser, requireAuth, requireRole } from '../../middleware/auth.ts';
+import { requireUploadedFile, uploadSingleFile } from '../../middleware/upload.ts';
 import { isSport } from '../../types/sport.ts';
 import { parseNewVenue, parseVenueChanges } from './venue.input.ts';
 import { VENUE_SORTS, type VenueFilter, type VenueSort } from './venue.repository.ts';
@@ -10,6 +11,7 @@ import {
   deleteOwnVenue,
   getOwnerVenues,
   getVenue,
+  replaceVenuePhoto,
   searchVenues,
   updateOwnVenue,
 } from './venue.service.ts';
@@ -66,6 +68,16 @@ venueRouter.patch('/:id', ...onlyOwner, async (req, res) => {
     parseIdParam(req.params.id),
     getAuthUser(req).id,
     parseVenueChanges(req.body),
+  );
+  res.json({ venue });
+});
+
+// multipart/form-data: file "foto" (jpg/png/webp, maks 2 MB)
+venueRouter.post('/:id/photo', ...onlyOwner, uploadSingleFile('foto'), async (req, res) => {
+  const venue = await replaceVenuePhoto(
+    parseIdParam(req.params.id),
+    getAuthUser(req).id,
+    requireUploadedFile(req.file, 'foto'),
   );
   res.json({ venue });
 });

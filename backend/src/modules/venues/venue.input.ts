@@ -6,6 +6,7 @@ import {
   requirePositiveInt,
   requireString,
 } from '../../lib/request.ts';
+import { isValidTime } from '../../lib/time.ts';
 import { isSport, type Sport } from '../../types/sport.ts';
 
 export type NewVenue = {
@@ -23,7 +24,6 @@ export type NewVenue = {
 
 export type VenueChanges = Partial<NewVenue>;
 
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 const PHOTO_URL_PATTERN = /^https?:\/\//i;
 
 function optionalSport(body: unknown): Sport | undefined {
@@ -37,7 +37,7 @@ function optionalSport(body: unknown): Sport | undefined {
 
 function optionalTime(body: unknown, field: string): string | undefined {
   const value = optionalString(body, field);
-  if (value !== undefined && !TIME_PATTERN.test(value)) {
+  if (value !== undefined && !isValidTime(value)) {
     throw new HttpError(400, `Field "${field}" harus berformat JJ:MM, contoh 08:00`);
   }
   return value;

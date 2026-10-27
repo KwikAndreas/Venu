@@ -1,4 +1,6 @@
+import { IMAGE_TYPES } from '../../lib/file-type.ts';
 import { HttpError } from '../../lib/http-error.ts';
+import { removeUpload, saveUpload } from '../../lib/storage.ts';
 import type { NewVenue, VenueChanges } from './venue.input.ts';
 import {
   deleteVenue,
@@ -13,6 +15,7 @@ import {
 } from './venue.repository.ts';
 
 const NOT_FOUND_MESSAGE = 'Lapangan tidak ditemukan';
+const LOCAL_PHOTO_PREFIX = '/uploads/';
 
 export function searchVenues(filter: VenueFilter): Promise<Venue[]> {
   if (filter.hargaMin && filter.hargaMax && filter.hargaMin > filter.hargaMax) {
@@ -44,6 +47,30 @@ export async function updateOwnVenue(
   const venue = await updateVenue(id, ownerId, changes);
   if (!venue) throw new HttpError(404, NOT_FOUND_MESSAGE);
   return venue;
+}
+
+/** Mengganti foto lapangan dengan file gambar yang diunggah; foto lokal lama dihapus. */
+export async function replaceVenuePhoto(
+  id: number,
+  ownerId: number,
+  photo: Buffer,
+): Promise<Venue> {
+  const current = await findVenueById(id);
+  if (!current || current.owner_id !== ownerId) throw new HttpError(404, NOT_FOUND_MESSAGE);
+
+  const saved = await saveUpload('venues', photo, IMAGE_TYPES);
+  let updated: Venue;
+  try {
+    updated = await updateOwnVenue(id, ownerId, { foto_url: `${LOCAL_PHOTO_PREFIX}${saved.key}` });
+  } catch (error) {
+    await removeUpload(saved.key);
+    throw error;
+  }
+
+  if (current.foto_url?.startsWith(LOCAL_PHOTO_PREFIX)) {
+    await removeUpload(current.foto_url.slice(LOCAL_PHOTO_PREFIX.length)).catch(() => undefined);
+  }
+  return updated;
 }
 
 export async function deleteOwnVenue(id: number, ownerId: number): Promise<void> {
