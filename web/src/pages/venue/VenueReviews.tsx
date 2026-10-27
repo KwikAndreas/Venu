@@ -45,7 +45,7 @@ function ReviewForm({ venueId, onCreated }: { venueId: number; onCreated: () => 
   return (
     <Card className="p-5">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <h3 className="type-h3 text-navy-900">Tulis ulasan</h3>
+        <h3 className="type-h3 text-fg">Tulis ulasan</h3>
         <StarInput value={rating} onChange={setRating} />
         <TextAreaField
           label="Komentar (opsional)"
@@ -95,7 +95,7 @@ export function VenueReviews({ venueId, onChanged }: { venueId: number; onChange
 
   return (
     <section id="ulasan" aria-labelledby="judul-ulasan" className="scroll-mt-24 space-y-5">
-      <h2 id="judul-ulasan" className="type-h2 text-navy-900">
+      <h2 id="judul-ulasan" className="type-h2 text-fg">
         Ulasan
       </h2>
 
@@ -118,14 +118,12 @@ export function VenueReviews({ venueId, onChanged }: { venueId: number; onChange
               <Card className="flex gap-4 p-5">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="font-semibold text-navy-900">{review.nama_user}</span>
+                    <span className="font-semibold text-fg">{review.nama_user}</span>
                     <StarDisplay rating={review.rating} />
                     <span className="text-xs text-muted">{formatDateTime(review.created_at)}</span>
                   </div>
                   {/* Komentar ditampilkan sebagai teks biasa; React meng-escape HTML di dalamnya. */}
-                  {review.komentar && (
-                    <p className="mt-2 text-sm text-navy-900">{review.komentar}</p>
-                  )}
+                  {review.komentar && <p className="mt-2 text-sm text-fg">{review.komentar}</p>}
                 </div>
                 {canDelete(review) && (
                   <IconAction

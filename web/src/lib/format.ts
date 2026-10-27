@@ -12,6 +12,17 @@ export function formatRupiah(amount: number): string {
   return rupiahFormatter.format(amount);
 }
 
+/** Harga ringkas ala papan skor: 150000 → "150K", 1250000 → "1,25JT". */
+export function formatPriceShort(amount: number): string {
+  if (amount >= 1_000_000) {
+    return `${(amount / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })}JT`;
+  }
+  if (amount >= 1000) {
+    return `${(amount / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })}K`;
+  }
+  return String(amount);
+}
+
 /** "2026-11-05" → "Kam, 5 Nov 2026" */
 export function formatDate(date: string): string {
   return new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {

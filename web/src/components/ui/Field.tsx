@@ -15,7 +15,7 @@ type ShellProps = FieldProps & { id: string; children: ReactNode };
 function FieldShell({ id, label, error, hint, className, children }: ShellProps) {
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-navy-900">
+      <label htmlFor={id} className="type-label mb-2 block text-muted">
         {label}
       </label>
       {children}
@@ -23,7 +23,7 @@ function FieldShell({ id, label, error, hint, className, children }: ShellProps)
         <p
           id={`${id}-error`}
           role="alert"
-          className="mt-1.5 flex items-start gap-1.5 text-sm text-danger-700"
+          className="mt-1.5 flex items-start gap-1.5 text-sm text-danger"
         >
           <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           {error}
@@ -89,7 +89,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-sm text-muted hover:text-navy-900"
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-sm text-muted hover:text-fg"
           aria-label={visible ? 'Sembunyikan password' : 'Tampilkan password'}
         >
           <Icon className="size-5" aria-hidden />

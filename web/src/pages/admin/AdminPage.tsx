@@ -1,4 +1,4 @@
-import { Building2, CircleAlert, ListChecks, ScrollText, Users } from 'lucide-react';
+import { Building2, ScrollText, Users } from 'lucide-react';
 import { useState } from 'react';
 import { ErrorState, Skeleton } from '../../components/ui/Feedback.tsx';
 import { Container, PageHeader, StatCard } from '../../components/ui/Layout.tsx';
@@ -22,23 +22,18 @@ function SummaryCards({ summary }: { summary: AdminSummary }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        icon={Users}
         label="Pengguna"
         value={totalUsers}
         note={`${summary.users.penyewa} penyewa · ${summary.users.pemilik} pemilik · ${summary.users.admin} admin`}
       />
-      <StatCard icon={Building2} label="Lapangan" value={summary.jumlah_lapangan} />
+      <StatCard label="Lapangan" value={summary.jumlah_lapangan} />
       <StatCard
-        icon={ListChecks}
+        highlight
         label="Booking"
         value={summary.jumlah_booking}
         note={`${summary.booking_menunggu} menunggu · ${summary.pembayaran_lunas} lunas`}
       />
-      <StatCard
-        icon={CircleAlert}
-        label="Login gagal (24 jam)"
-        value={summary.login_gagal_24_jam}
-      />
+      <StatCard label="Login gagal (24 jam)" value={summary.login_gagal_24_jam} />
     </div>
   );
 }

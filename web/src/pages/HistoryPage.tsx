@@ -1,5 +1,6 @@
-import { CalendarDays, Clock, Inbox, Star, Wallet, CircleX } from 'lucide-react';
+import { Inbox, Star, Wallet, CircleX } from 'lucide-react';
 import { useState } from 'react';
+import { DateBlock } from '../components/booking/DateBlock.tsx';
 import { useToast } from '../components/toast/toast-context.ts';
 import { BookingStatusBadge, PaymentStatusBadge, SportBadge } from '../components/ui/Badge.tsx';
 import { Button, ButtonLink } from '../components/ui/Button.tsx';
@@ -30,25 +31,26 @@ function canReview(booking: BookingSummary, today: string): boolean {
 function BookingRow({ booking, onCancel }: { booking: BookingSummary; onCancel: () => void }) {
   const today = todayInJakarta();
   return (
-    <Card className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <SportBadge sport={booking.jenis_olahraga} />
-          <BookingStatusBadge status={booking.status} />
-          <PaymentStatusBadge status={booking.payment_status} />
+    <Card className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:p-5">
+      <div className="flex gap-4">
+        <DateBlock date={booking.tanggal} />
+        <div className="min-w-0 space-y-2">
+          <h2 className="type-h3 text-fg">
+            <span className="sr-only">{formatDate(booking.tanggal)}, </span>
+            {booking.venue_nama}
+          </h2>
+          <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <span className="font-display text-2xl font-bold tabular-nums text-fg">
+              {booking.jam_mulai}–{booking.jam_selesai}
+            </span>
+            <span className="text-sm text-muted">{formatRupiah(booking.total_harga)}</span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <SportBadge sport={booking.jenis_olahraga} />
+            <BookingStatusBadge status={booking.status} />
+            <PaymentStatusBadge status={booking.payment_status} />
+          </div>
         </div>
-        <h2 className="font-display text-xl font-semibold text-navy-900">{booking.venue_nama}</h2>
-        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays className="size-4" aria-hidden />
-            {formatDate(booking.tanggal)}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Clock className="size-4" aria-hidden />
-            {booking.jam_mulai}–{booking.jam_selesai}
-          </span>
-          <span className="font-semibold text-navy-900">{formatRupiah(booking.total_harga)}</span>
-        </p>
       </div>
       <div className="flex flex-wrap gap-2">
         {needsPayment(booking) && (
@@ -58,7 +60,7 @@ function BookingRow({ booking, onCancel }: { booking: BookingSummary; onCancel: 
           </ButtonLink>
         )}
         {canReview(booking, today) && (
-          <ButtonLink to={`/lapangan/${booking.venue_id}#ulasan`} variant="outline" size="sm">
+          <ButtonLink to={`/lapangan/${booking.venue_id}#ulasan`} variant="secondary" size="sm">
             <Star className="size-4" aria-hidden />
             Beri ulasan
           </ButtonLink>

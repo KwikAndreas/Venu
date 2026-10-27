@@ -86,21 +86,21 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
     <Card className="p-5">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <h2 className="type-h2 text-navy-900">Pembayaran</h2>
+          <h2 className="type-h2 text-fg">Pembayaran</h2>
           <p className="mt-1 text-sm text-muted">
             Pembayaran ini simulasi. Tidak ada uang yang ditarik.
           </p>
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm font-medium text-navy-900">Metode pembayaran</legend>
+          <legend className="type-label mb-2 text-muted">Metode pembayaran</legend>
           {METHODS.map(({ value, icon: Icon, instruction }) => {
             const selected = metode === value;
             return (
               <label
                 key={value}
-                className={`flex cursor-pointer gap-3 rounded-md border p-4 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-500 ${
-                  selected ? 'border-gold-500 bg-gold-100' : 'border-line hover:border-navy-600'
+                className={`flex cursor-pointer gap-3 rounded-md border p-4 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-volt ${
+                  selected ? 'border-volt bg-volt/10' : 'border-line hover:border-fg'
                 }`}
               >
                 <input
@@ -111,9 +111,9 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
                   onChange={() => setMetode(value)}
                   className="sr-only"
                 />
-                <Icon className="mt-0.5 size-5 shrink-0 text-navy-900" aria-hidden />
+                <Icon className="mt-0.5 size-5 shrink-0 text-fg" aria-hidden />
                 <span>
-                  <span className="block text-sm font-semibold text-navy-900">
+                  <span className="block text-sm font-semibold text-fg">
                     {PAYMENT_METHOD_LABELS[value]}
                   </span>
                   {selected && <span className="mt-1 block text-sm text-muted">{instruction}</span>}
@@ -124,7 +124,7 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
         </fieldset>
 
         <div>
-          <label htmlFor="bukti" className="mb-1.5 block text-sm font-medium text-navy-900">
+          <label htmlFor="bukti" className="type-label mb-2 block text-muted">
             Bukti bayar
           </label>
           <input
@@ -134,11 +134,11 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
             onChange={handleFile}
             aria-invalid={fileError ? true : undefined}
             aria-describedby="bukti-info"
-            className="block w-full cursor-pointer rounded-sm border border-line bg-surface text-sm text-muted file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:border-r file:border-line file:bg-ivory file:px-4 file:text-sm file:font-medium file:text-navy-900"
+            className="block w-full cursor-pointer rounded-sm border border-line bg-surface text-sm text-muted file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:border-r file:border-line file:bg-surface-2 file:px-4 file:text-sm file:font-medium file:text-fg"
           />
           <p
             id="bukti-info"
-            className={`mt-1.5 text-sm ${fileError ? 'text-danger-700' : 'text-muted'}`}
+            className={`mt-1.5 text-sm ${fileError ? 'text-danger' : 'text-muted'}`}
             role={fileError ? 'alert' : undefined}
           >
             {fileError ?? 'JPG, PNG, WEBP, atau PDF. Maksimal 2 MB.'}
@@ -163,7 +163,7 @@ function PaymentStatusPanel({ booking }: { booking: BookingSummary }) {
           title="Pembayaran lunas"
           description="Booking Anda sudah dikonfirmasi pemilik. Sampai jumpa di lapangan!"
           action={
-            <ButtonLink to="/riwayat" variant="outline">
+            <ButtonLink to="/riwayat" variant="secondary">
               Lihat riwayat
             </ButtonLink>
           }
@@ -179,7 +179,7 @@ function PaymentStatusPanel({ booking }: { booking: BookingSummary }) {
           title="Menunggu verifikasi"
           description="Bukti bayar sudah terkirim. Pemilik lapangan akan memeriksa dan mengonfirmasi booking Anda."
           action={
-            <ButtonLink to="/riwayat" variant="outline">
+            <ButtonLink to="/riwayat" variant="secondary">
               Lihat riwayat
             </ButtonLink>
           }
@@ -194,7 +194,7 @@ function PaymentStatusPanel({ booking }: { booking: BookingSummary }) {
         title="Booking tidak bisa dibayar"
         description={`Booking ini berstatus "${booking.status}".`}
         action={
-          <ButtonLink to="/cari" variant="outline">
+          <ButtonLink to="/cari" variant="secondary">
             Cari lapangan lain
           </ButtonLink>
         }

@@ -71,8 +71,8 @@ export function IncomingBookings() {
             onClick={() => setStatus(option)}
             className={`h-10 rounded-md border px-3 text-sm transition-colors duration-150 ease-out ${
               status === option
-                ? 'border-navy-900 bg-navy-900 text-ivory'
-                : 'border-line bg-surface text-navy-900 hover:border-navy-600'
+                ? 'border-volt bg-volt text-ink'
+                : 'border-line bg-surface text-fg hover:border-fg'
             }`}
           >
             {option === 'semua' ? 'Semua' : BOOKING_STATUS_LABELS[option]}

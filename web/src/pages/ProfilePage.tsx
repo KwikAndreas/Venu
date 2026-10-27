@@ -40,11 +40,11 @@ function ProfileForm({ user }: { user: User }) {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-gold-100">
+          <div className="flex size-10 items-center justify-center rounded-full bg-volt/10">
             <UserRound className="size-5" aria-hidden />
           </div>
           <div>
-            <h2 className="type-h3 text-navy-900">Data profil</h2>
+            <h2 className="type-h3 text-fg">Data profil</h2>
             <p className="text-sm text-muted">
               {ROLE_LABELS[user.role]} · bergabung {formatDateTime(user.created_at)}
             </p>
@@ -105,10 +105,10 @@ function PasswordForm() {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-gold-100">
+          <div className="flex size-10 items-center justify-center rounded-full bg-volt/10">
             <KeyRound className="size-5" aria-hidden />
           </div>
-          <h2 className="type-h3 text-navy-900">Ganti password</h2>
+          <h2 className="type-h3 text-fg">Ganti password</h2>
         </div>
         <FormError message={error} />
         <PasswordField

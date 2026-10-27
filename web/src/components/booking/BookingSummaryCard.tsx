@@ -1,43 +1,47 @@
-import { CalendarDays, Clock, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { formatDate, formatRupiah, hoursBetween } from '../../lib/format.ts';
 import type { BookingSummary } from '../../lib/types.ts';
 import { BookingStatusBadge, PaymentStatusBadge, SportBadge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Layout.tsx';
+import { DateBlock } from './DateBlock.tsx';
 
+/** Ringkasan booking bergaya tiket: info pertandingan di atas, sobekan putus-putus, total di bawah. */
 export function BookingSummaryCard({ booking }: { booking: BookingSummary }) {
   const hours = hoursBetween(booking.jam_mulai, booking.jam_selesai);
   return (
-    <Card className="p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <SportBadge sport={booking.jenis_olahraga} />
-        <BookingStatusBadge status={booking.status} />
-        <PaymentStatusBadge status={booking.payment_status} />
-      </div>
-      <h2 className="type-h2 mt-3 text-navy-900">{booking.venue_nama}</h2>
-      <ul className="mt-3 space-y-2 text-sm text-muted">
-        <li className="flex items-center gap-2">
+    <Card className="overflow-hidden">
+      <div className="p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <SportBadge sport={booking.jenis_olahraga} />
+          <BookingStatusBadge status={booking.status} />
+          <PaymentStatusBadge status={booking.payment_status} />
+        </div>
+        <h2 className="type-h2 mt-4 text-fg">{booking.venue_nama}</h2>
+        <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
           <MapPin className="size-4" aria-hidden />
           {booking.venue_kota}
-        </li>
-        <li className="flex items-center gap-2">
-          <CalendarDays className="size-4" aria-hidden />
-          {formatDate(booking.tanggal)}
-        </li>
-        <li className="flex items-center gap-2">
-          <Clock className="size-4" aria-hidden />
-          {booking.jam_mulai}–{booking.jam_selesai} WIB ({hours} jam)
-        </li>
-      </ul>
-      <dl className="mt-5 space-y-2 border-t border-line pt-4 text-sm">
-        <div className="flex justify-between">
-          <dt className="text-muted">
+        </p>
+        <div className="mt-5 flex items-center gap-4">
+          <DateBlock date={booking.tanggal} />
+          <div>
+            <p className="type-label text-muted">{formatDate(booking.tanggal)}</p>
+            <p className="type-score mt-1 text-fg">
+              {booking.jam_mulai}–{booking.jam_selesai}
+            </p>
+            <p className="mt-1 text-sm text-muted">{hours} jam · WIB</p>
+          </div>
+        </div>
+      </div>
+      <dl className="border-t border-dashed border-line bg-surface-2/50 p-5 text-sm">
+        <div className="flex justify-between text-muted">
+          <dt>
             {formatRupiah(booking.harga_per_jam)} × {hours} jam
           </dt>
           <dd>{formatRupiah(booking.total_harga)}</dd>
         </div>
-        <div className="flex justify-between border-t border-line pt-3">
-          <dt className="font-medium text-navy-900">Total bayar</dt>
-          <dd className="text-lg font-bold text-navy-900">{formatRupiah(booking.total_harga)}</dd>
+        <div className="mt-3 flex items-baseline justify-between">
+          <dt className="type-label text-muted">Total bayar</dt>
+          <dd className="type-score text-volt">{formatRupiah(booking.total_harga)}</dd>
         </div>
       </dl>
     </Card>

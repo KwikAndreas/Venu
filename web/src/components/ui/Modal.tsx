@@ -12,7 +12,7 @@ type ModalProps = {
   wide?: boolean;
 };
 
-/** Kartu putih radius 16 di atas overlay Navy 50%. Tutup dengan Esc, tombol X, atau klik overlay. */
+/** Panel surface radius 8 di atas overlay hitam 70%. Tutup dengan Esc, tombol X, atau klik overlay. */
 export function Modal({ open, title, onClose, children, footer, wide = false }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -40,7 +40,7 @@ export function Modal({ open, title, onClose, children, footer, wide = false }: 
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -50,10 +50,10 @@ export function Modal({ open, title, onClose, children, footer, wide = false }: 
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`flex max-h-[90vh] w-full flex-col rounded-lg bg-surface shadow-raised ${wide ? 'max-w-2xl' : 'max-w-md'}`}
+        className={`flex max-h-[90vh] w-full flex-col rounded-lg border border-line bg-surface shadow-pop ${wide ? 'max-w-2xl' : 'max-w-md'}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4">
-          <h2 id={titleId} className="type-h2 text-navy-900">
+          <h2 id={titleId} className="type-h2 text-fg">
             {title}
           </h2>
           <Button
@@ -110,7 +110,7 @@ export function ConfirmDialog({
       onClose={onCancel}
       footer={
         <>
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>
             Batal
           </Button>
           <Button

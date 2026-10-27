@@ -1,169 +1,169 @@
-# DESIGN.md — Sistem Desain Venu
+# DESIGN.md — Sistem Desain Venu: "Night Match"
 
 Satu bahasa visual untuk **web** (React + Tailwind) dan **mobile** (Expo + NativeWind).
-Gaya: **enterprise, modern, elegan, kesan luxury** — tenang, rapi, banyak ruang kosong, detail halus. Bukan gaya "gamer" atau penuh warna.
+Gaya: **sporty, energik, tegas** — seperti papan skor dan lapangan di bawah lampu stadion malam. Gelap sebagai dasar, satu warna "volt" yang menyala untuk aksi, huruf condensed tebal kapital untuk judul, angka besar ala papan skor.
+
+> Riwayat: versi awal (Ivory/Navy/Emas + Playfair, gaya luxury) diganti pada 2026-10-27 atas permintaan user karena terasa generik dan kurang sporty.
 
 ---
 
 ## 1. Prinsip
 
-1. **Tenang dan lapang:** ruang putih lega, hirarki jelas, tidak ramai.
-2. **Emas hanya untuk hal penting:** aksen dipakai hemat (aksi utama, sorotan, status penting).
-3. **Konsisten lintas platform:** token warna, huruf, jarak, dan radius sama persis di web dan mobile.
-4. **Mudah dibaca:** kontras memenuhi WCAG AA, target sentuh minimal 44px.
-5. **Aman secara UX:** pesan error generik untuk login (tidak membocorkan email terdaftar atau tidak), konfirmasi sebelum aksi destruktif.
+1. **Seperti papan skor:** informasi penting (harga, jam, angka statistik) tampil besar dan tegas memakai huruf condensed dan angka tabular.
+2. **Volt hanya untuk aksi dan sorotan:** warna aksen dipakai hemat untuk CTA, status aktif, dan angka kunci. Bila semua menyala, tidak ada yang menonjol.
+3. **Gerak maju:** garis diagonal, panah, dan judul miring memberi kesan dinamis. Pakai secukupnya, jangan di setiap elemen.
+4. **Mudah dibaca:** kontras memenuhi WCAG AA, target sentuh minimal 44px, isi teks tetap huruf biasa (bukan kapital semua).
+5. **Aman secara UX:** pesan error login generik (tidak membocorkan email terdaftar atau tidak), konfirmasi sebelum aksi destruktif.
+6. **Konsisten lintas platform:** token warna, huruf, jarak, dan radius sama persis di web dan mobile.
 
 ---
 
 ## 2. Warna — Aturan 60 / 30 / 10
 
-Palet: **Ivory (utama) · Midnight Navy (sekunder) · Champagne Gold (aksen)**.
+Palet: **Ink & Asphalt (dasar gelap) · Chalk (teks & garis) · Volt (aksen)**.
 
-| Peran        | Porsi   | Nama           | Hex       | Dipakai untuk                                                   |
-| ------------ | ------- | -------------- | --------- | --------------------------------------------------------------- |
-| **Utama**    | **60%** | Ivory          | `#F7F4EE` | Latar halaman, area konten luas                                 |
-|              |         | Surface        | `#FFFFFF` | Kartu, modal, input                                             |
-| **Sekunder** | **30%** | Midnight Navy  | `#0F1B2D` | Navbar, header, hero, footer, teks utama, tombol sekunder       |
-|              |         | Navy 800       | `#1B2B45` | Panel gelap, hover navy                                         |
-|              |         | Navy 600       | `#2C4163` | Garis atau ikon pada latar gelap                                |
-| **Aksen**    | **10%** | Champagne Gold | `#C9A24B` | Tombol aksi utama (CTA), sorotan, ikon penting, indikator aktif |
-|              |         | Gold 600       | `#A8842F` | Hover/pressed pada emas                                         |
-|              |         | Gold 300       | `#E3C77D` | Garis tipis, dekorasi                                           |
-|              |         | Gold 100       | `#F5EBCF` | Latar badge atau sorotan lembut                                 |
+| Peran       | Porsi   | Token       | Hex       | Dipakai untuk                                                  |
+| ----------- | ------- | ----------- | --------- | -------------------------------------------------------------- |
+| **Dasar**   | **60%** | `ink`       | `#0B0D10` | Latar halaman, navbar, footer                                  |
+|             |         | `surface`   | `#14181D` | Kartu, panel, modal, baris tabel                               |
+|             |         | `surface-2` | `#1C2128` | Input, header tabel, hover, chip tidak aktif                   |
+| **Isi**     | **30%** | `fg`        | `#F2F4F1` | Teks utama, judul, ikon                                        |
+|             |         | `muted`     | `#9AA3AE` | Teks sekunder, label, placeholder                              |
+|             |         | `line`      | `#2A3039` | Garis kartu, pemisah, border input                             |
+| **Aksen**   | **10%** | `volt`      | `#C6FF1A` | Tombol aksi utama, indikator aktif, slot dipilih, angka sorot |
+|             |         | `volt-600`  | `#A8E000` | Hover/pressed tombol volt                                      |
 
-**Netral dan semantik**
+**Semantik (status)** — warna terang karena dipakai di atas latar gelap:
 
-| Token      | Hex       | Pakai                                  |
-| ---------- | --------- | -------------------------------------- |
-| Text muted | `#5B6574` | Teks sekunder pada latar Ivory/putih   |
-| Border     | `#E3DDD0` | Garis kartu, input, pemisah            |
-| Success    | `#2F7D5B` | Booking dikonfirmasi, pembayaran lunas |
-| Warning    | `#B7791F` | Menunggu pembayaran                    |
-| Danger     | `#B3382C` | Error, batal, hapus                    |
-| Info       | `#2C5282` | Informasi netral                       |
+| Token     | Hex       | Pakai                                   |
+| --------- | --------- | --------------------------------------- |
+| `success` | `#34D399` | Dikonfirmasi, lunas                     |
+| `warning` | `#FFB020` | Menunggu, menunggu verifikasi           |
+| `danger`  | `#FF5C5C` | Ditolak, dibatalkan, gagal, hapus       |
+| `info`    | `#4DA3FF` | Selesai, informasi netral               |
 
-**Tint status (untuk badge)**: latar lembut + teks gelap, kontras teks ≥ 4.5:1. Warna semantik di atas (mis. Warning `#B7791F`) dipakai untuk garis/ikon; untuk **teks** di atas latar terang pakai varian 700 berikut.
-
-| Token       | Latar (50) | Teks (700) | Dipakai untuk                 |
-| ----------- | ---------- | ---------- | ----------------------------- |
-| success     | `#E7F2EC`  | `#22603F`  | Dikonfirmasi, Lunas           |
-| warning     | `#FBF1E0`  | `#7A4D0B`  | Menunggu                      |
-| danger      | `#F9E7E5`  | `#8C2A20`  | Ditolak, Dibatalkan, Gagal    |
-| info / navy | `#E6EDF6` / `#E9EDF3` | Navy 600 `#2C4163` | Selesai, netral |
+Badge status: teks warna semantik + latar warna yang sama dengan opasitas 12% + garis kiri 2px warna yang sama.
 
 **Aturan penggunaan (penting):**
 
-- Ivory mendominasi sekitar 60% layar, Navy sekitar 30%, Gold **tidak lebih dari ~10%**.
-- **Jangan pakai teks emas di atas Ivory atau putih** (kontras kurang). Emas di latar terang hanya sebagai garis, ikon, atau latar tombol.
-- Teks di atas tombol emas: **Midnight Navy** (kontras sekitar 7:1).
-- Teks di atas Navy: Ivory (`#F7F4EE`). Emas boleh untuk teks/ikon pada latar Navy (kontras sekitar 7:1).
-- Status jangan hanya pakai warna: sertakan ikon atau label teks.
-- **Dark mode (opsional):** tukar porsi, Navy jadi 60% (latar), Ivory jadi teks, Gold tetap 10%.
+- Gelap (Ink/Asphalt) mendominasi ±60% layar, teks/garis Chalk ±30%, Volt **tidak lebih dari ~10%**.
+- **Teks di atas tombol Volt selalu Ink** (`#0B0D10`), kontras ±16:1.
+- Volt boleh dipakai sebagai warna teks di atas latar gelap (kontras ±16:1), tetapi **jangan untuk paragraf**, hanya angka sorot, label aktif, dan tautan pendek.
+- Status tidak boleh hanya mengandalkan warna: selalu sertakan ikon atau label teks.
+- Tidak ada mode terang di versi ini. `color-scheme: dark` dipakai agar kontrol bawaan browser (kalender, scrollbar) ikut gelap.
+
+Kontras yang sudah dicek: Chalk di Ink ±18:1, Muted di Asphalt ±7:1, Danger di Asphalt ±5.9:1, Volt di Ink ±16:1.
 
 ---
 
 ## 3. Tipografi
 
-| Peran           | Font                         | Dipakai untuk                                |
-| --------------- | ---------------------------- | -------------------------------------------- |
-| Display / judul | **Playfair Display** (serif) | Judul hero, H1, H2, angka besar di dashboard |
-| UI / isi        | **Inter** (sans-serif)       | Semua teks lain: body, tombol, label, tabel  |
+| Peran           | Font                                  | Dipakai untuk                                        |
+| --------------- | ------------------------------------- | ---------------------------------------------------- |
+| Display / judul | **Barlow Condensed** (600, 700, 800, 800 italic) | Judul halaman, angka statistik, harga, jam slot, label tombol, navigasi |
+| UI / isi        | **Barlow** (400, 500, 600, 700)       | Paragraf, deskripsi, isi form, isi tabel             |
 
 Pemasangan:
 
-- Web: `@fontsource/playfair-display` dan `@fontsource/inter`.
-- Mobile: `@expo-google-fonts/playfair-display` dan `@expo-google-fonts/inter`.
+- Web: `@fontsource/barlow-condensed` dan `@fontsource/barlow`.
+- Mobile: `@expo-google-fonts/barlow-condensed` dan `@expo-google-fonts/barlow`.
 
 Skala (web / mobile):
 
-| Token   | Web     | Mobile  | Font     | Weight |
-| ------- | ------- | ------- | -------- | ------ |
-| Display | 48 / 56 | 32 / 40 | Playfair | 600    |
-| H1      | 36 / 44 | 28 / 36 | Playfair | 600    |
-| H2      | 28 / 36 | 22 / 30 | Playfair | 600    |
-| H3      | 20 / 28 | 18 / 26 | Inter    | 600    |
-| Body    | 16 / 24 | 16 / 24 | Inter    | 400    |
-| Small   | 14 / 20 | 14 / 20 | Inter    | 400    |
-| Caption | 12 / 16 | 12 / 16 | Inter    | 500    |
+| Token   | Web     | Mobile  | Font             | Gaya                               |
+| ------- | ------- | ------- | ---------------- | ---------------------------------- |
+| Display | 72 / 68 | 44 / 42 | Barlow Condensed | 800 italic, KAPITAL, tracking -1%  |
+| H1      | 48 / 48 | 34 / 36 | Barlow Condensed | 800, KAPITAL                       |
+| H2      | 30 / 34 | 24 / 28 | Barlow Condensed | 700, KAPITAL                       |
+| H3      | 20 / 26 | 18 / 24 | Barlow Condensed | 700, KAPITAL, tracking +2%         |
+| Score   | 40 / 40 | 32 / 32 | Barlow Condensed | 800, angka tabular                 |
+| Body    | 16 / 24 | 16 / 24 | Barlow           | 400                                |
+| Small   | 14 / 20 | 14 / 20 | Barlow           | 400                                |
+| Label   | 12 / 16 | 12 / 16 | Barlow Condensed | 700, KAPITAL, tracking +12%        |
 
-Judul memakai letter-spacing normal; label huruf kapital kecil (caption) boleh `tracking-wider`.
+Judul dan label boleh kapital semua. Paragraf, isi form, dan pesan error **tidak** kapital semua.
 
 ---
 
-## 4. Jarak, Radius, Bayangan
+## 4. Jarak, Radius, Garis
 
-- **Grid jarak 4px.** Skala: 4, 8, 12, 16, 24, 32, 48, 64.
-- **Radius:** kecil 8 (input, badge), sedang 12 (tombol, kartu kecil), besar 16 (kartu, modal). Jangan lebih bulat dari itu.
-- **Border:** 1px `#E3DDD0`. Utamakan garis halus daripada bayangan tebal.
-- **Bayangan** (lembut, hanya untuk elemen terangkat):
-  - Kartu: `0 1px 2px rgba(15,27,45,0.06)`
-  - Hover/modal: `0 8px 24px rgba(15,27,45,0.10)`
+- **Grid jarak 4px.** Skala: 4, 8, 12, 16, 24, 32, 48, 64, 96.
+- **Radius kecil dan tegas:** `sm` 2px (badge), `md` 4px (tombol, input, chip), `lg` 8px (kartu, modal). Jangan lebih bulat.
+- **Garis lebih dari bayangan:** border 1px `line`. Bayangan hanya untuk modal dan toast: `0 16px 40px rgba(0,0,0,0.5)`.
+- **Aksen diagonal:** pola garis miring 45° (`repeating-linear-gradient`) dipakai untuk latar placeholder foto, slot tidak tersedia, dan dekorasi hero.
 - **Lebar konten web:** maksimum 1200px, tengah. Mobile: padding horizontal 16.
 
 ---
 
 ## 5. Komponen
 
-**Tombol**
+**Tombol** (label Barlow Condensed 700, kapital, tracking +4%)
 
-- _Primer (CTA):_ latar Gold `#C9A24B`, teks Navy, hover Gold 600. Satu CTA utama per layar.
-- _Sekunder:_ latar Navy, teks Ivory, hover Navy 800.
-- _Ghost/Outline:_ border Navy 1px, teks Navy, hover latar Gold 100.
-- _Destruktif:_ latar Danger, teks putih, selalu dengan konfirmasi.
-- Tinggi 44px (mobile), 40–44px (web). Fokus: ring emas 2px dengan offset 2px.
+- _Primer (CTA):_ latar Volt, teks Ink, hover Volt 600, ikon panah di kanan. Satu CTA utama per layar.
+- _Sekunder:_ latar `surface-2`, border `line`, teks `fg`, hover border `fg`.
+- _Ghost:_ tanpa latar, teks `fg`, hover latar `surface-2`.
+- _Destruktif:_ latar Danger, teks Ink. _Pemicu destruktif di daftar:_ garis Danger, teks Danger. Selalu dengan konfirmasi.
+- Tinggi 44px (40px untuk ukuran kecil di tabel). Fokus: ring Volt 2px offset 2px.
 
 **Input**
 
-- Latar putih, border `#E3DDD0`, radius 8, tinggi 44px. Fokus: border Gold + ring emas lembut. Error: border Danger + pesan di bawah dengan ikon.
-- Label selalu di atas input, bukan hanya placeholder.
+- Latar `surface-2`, border `line`, radius 4, tinggi 44px, teks `fg`. Fokus: border Volt. Error: border Danger + pesan di bawah dengan ikon.
+- Label selalu di atas input (Barlow Condensed, kapital kecil).
 
-**Kartu lapangan**
+**Baris lapangan ("fixture")** — pengganti kartu seragam
 
-- Foto rasio 16:9 di atas, radius 16, border halus. Judul Playfair H3, harga dengan angka tebal, badge jenis olahraga (latar Gold 100, teks Navy). Hover (web): naik 2px dengan bayangan hover.
+- Satu baris per lapangan: nomor urut besar (`01`), foto kecil 16:9 atau placeholder bergaris diagonal, nama KAPITAL condensed, kota + badge olahraga, rating, harga besar di kanan, panah. Hover: border kiri Volt dan latar `surface-2`.
+- Di mobile, baris menjadi tumpukan vertikal dengan harga tetap menonjol.
 
-**Badge status booking**
+**Badge**
 
-- Menunggu: Warning, Dikonfirmasi: Success, Dibatalkan: Danger, Selesai: Navy 600. Latar tint lembut, teks gelap, disertai ikon kecil.
+- Status: teks semantik + latar 12% + garis kiri 2px, label kapital condensed, disertai ikon kecil.
+- Olahraga: garis `line`, teks `fg`, kapital condensed.
 
 **Navigasi**
 
-- _Web:_ navbar Navy tinggi 64px, logo Playfair berwarna Ivory dengan aksen Gold, menu aktif ditandai garis bawah Gold.
-- _Mobile:_ bottom tab bar latar Navy, ikon aktif Gold, tidak aktif Navy 600/Ivory 60%.
+- _Web:_ navbar Ink tinggi 64px, logo "VENU" condensed 800 italic dengan garis miring Volt, menu kapital condensed, menu aktif ditandai bar Volt 3px di bawah.
+- _Mobile:_ bottom tab bar Ink, ikon aktif Volt, tidak aktif `muted`.
 
-**Tabel (dashboard pemilik)**
+**Papan skor (statistik)**
 
-- Header latar Ivory, teks caption huruf kapital kecil, baris bergaris tipis, zebra sangat halus. Aksi baris berupa ikon di kanan.
+- Angka besar Barlow Condensed 800 (token Score), label kapital kecil `muted`, garis atas 2px Volt pada kartu yang paling penting saja.
 
-**Kartu statistik (dashboard)**
+**Tabel**
 
-- Angka besar Playfair, label caption muted, ikon di kiri atas dalam lingkaran Gold 100.
+- Header `surface-2` dengan label kapital, baris dipisah garis `line`, hover `surface-2`. Aksi baris berupa ikon di kanan.
 
 **Pemilih slot jam**
 
-- Chip 44px: tersedia (putih, border), dipilih (Navy, teks Ivory, garis Gold), tidak tersedia (Ivory gelap, teks muted, dicoret). Jangan hanya mengandalkan warna.
+- Kotak 44px berisi jam condensed: tersedia (`surface-2`, border `line`), dipilih (latar Volt, teks Ink), tidak tersedia (pola diagonal, teks `muted` dicoret, nonaktif). Jangan hanya mengandalkan warna.
 
 **Modal / Toast / Empty state / Skeleton**
 
-- Modal: kartu putih radius 16 dengan overlay Navy 50%. Toast: Navy dengan ikon status, muncul 3 detik. Empty state: ilustrasi garis sederhana, judul Playfair, satu tombol aksi. Loading memakai skeleton, bukan spinner penuh layar.
+- Modal: panel `surface` radius 8, border `line`, overlay hitam 70%. Toast: `surface-2` dengan garis kiri warna status + ikon, 3 detik. Empty state: ikon bergaris besar, judul H2, satu tombol aksi. Loading memakai skeleton (`surface-2` berdenyut), bukan spinner layar penuh.
+
+**Banner mode keamanan**
+
+- Saat aplikasi berjalan di mode `before` (rentan), tampil pita peringatan berpola diagonal Warning di atas navbar: "MODE BEFORE — RENTAN, HANYA UNTUK PENGUJIAN LOKAL".
 
 ---
 
 ## 6. Ikon dan Gambar
 
-- Ikon: **Lucide** (`lucide-react` di web, `lucide-react-native` di mobile), stroke 1.5–2, ukuran 20/24.
-- Foto lapangan: terang, bersih, tanpa overlay mencolok. Gunakan gradien Navy tipis di bagian bawah foto hanya bila ada teks di atasnya.
+- Ikon: **Lucide** (`lucide-react` di web, `lucide-react-native` di mobile), stroke 1.75–2, ukuran 16/20/24.
+- Foto lapangan: tampil tanpa filter berlebihan. Gradien Ink tipis di bawah foto hanya bila ada teks di atasnya.
+- Placeholder tanpa foto: pola diagonal + inisial olahraga besar (mis. "FUT").
 - Jangan campur gaya ikon (hanya satu keluarga).
 
 ## 7. Gerak (Motion)
 
-- Durasi 150–250ms, easing `ease-out`. Hanya untuk transisi hover, fokus, buka/tutup modal, dan perpindahan halaman halus.
+- Durasi 150–200ms, easing `ease-out`. Untuk hover, fokus, buka/tutup modal, dan geser panah CTA 2px saat hover.
 - Hormati `prefers-reduced-motion` (web) dan pengaturan reduce motion (mobile).
 - Tidak ada animasi berkedip atau memantul.
 
 ## 8. Aksesibilitas
 
 - Kontras minimal WCAG AA (teks biasa 4.5:1). Pasangan warna di Bagian 2 sudah memenuhi bila aturannya diikuti.
-- Semua elemen interaktif dapat difokus dan punya ring fokus terlihat.
+- Semua elemen interaktif dapat difokus dan punya ring fokus Volt yang terlihat.
 - Gambar punya teks alternatif. Form punya label dan pesan error yang dibacakan pembaca layar.
 - Target sentuh minimal 44x44.
 
@@ -171,16 +171,16 @@ Judul memakai letter-spacing normal; label huruf kapital kecil (caption) boleh `
 
 ## 9. Layar Utama
 
-| Layar             | Isi pokok                                                                                       |
-| ----------------- | ----------------------------------------------------------------------------------------------- |
-| Beranda           | Hero Navy dengan judul Playfair + pencarian cepat (olahraga, tanggal), daftar lapangan unggulan |
-| Cari Lapangan     | Filter (olahraga, harga, lokasi), grid kartu                                                    |
-| Detail Lapangan   | Galeri, info, fasilitas, pemilih tanggal dan slot, ringkasan harga, CTA "Pesan Sekarang"        |
-| Checkout          | Ringkasan booking, metode bayar (simulasi), upload bukti bayar                                  |
-| Riwayat           | Daftar booking dengan badge status, aksi batalkan                                               |
-| Login / Register  | Kartu terpusat di latar Ivory, pesan error generik                                              |
-| Dashboard Pemilik | Kartu statistik, tabel booking masuk, kelola lapangan                                           |
-| Panel Admin       | Tabel user dan lapangan, log aktivitas                                                          |
+| Layar             | Isi pokok                                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| Beranda           | Hero judul display miring + pilihan olahraga besar + pencarian cepat, strip papan skor (jumlah lapangan/kota), daftar fixture lapangan |
+| Cari Lapangan     | Strip filter horizontal (olahraga, nama, lokasi, harga, urutan), daftar fixture                                |
+| Detail Lapangan   | Judul besar, info & fasilitas, panel jadwal (tanggal, grid slot, ringkasan harga ala papan skor), CTA "Pesan"  |
+| Checkout          | Ringkasan booking ala tiket, metode bayar (simulasi), upload bukti bayar                                       |
+| Riwayat           | Daftar booking ala tiket dengan badge status, aksi bayar/batal/ulas                                             |
+| Login / Register  | Panel terpusat di latar Ink berpola diagonal, pesan error generik                                              |
+| Dashboard Pemilik | Papan skor statistik, tabel booking masuk, kelola lapangan                                                     |
+| Panel Admin       | Papan skor ringkasan, tabel user dan lapangan, log aktivitas                                                   |
 
 ---
 
@@ -192,46 +192,36 @@ Judul memakai letter-spacing normal; label huruf kapital kecil (caption) boleh `
 @import "tailwindcss";
 
 @theme {
-  --color-ivory: #f7f4ee;
-  --color-surface: #ffffff;
-  --color-navy-900: #0f1b2d;
-  --color-navy-800: #1b2b45;
-  --color-navy-600: #2c4163;
-  --color-gold-500: #c9a24b;
-  --color-gold-600: #a8842f;
-  --color-gold-300: #e3c77d;
-  --color-gold-100: #f5ebcf;
-  --color-muted: #5b6574;
-  --color-line: #e3ddd0;
-  --color-success: #2f7d5b;
-  --color-warning: #b7791f;
-  --color-danger: #b3382c;
-  --color-info: #2c5282;
+  --color-ink: #0b0d10;
+  --color-surface: #14181d;
+  --color-surface-2: #1c2128;
+  --color-line: #2a3039;
+  --color-fg: #f2f4f1;
+  --color-muted: #9aa3ae;
+  --color-volt: #c6ff1a;
+  --color-volt-600: #a8e000;
+  --color-success: #34d399;
+  --color-warning: #ffb020;
+  --color-danger: #ff5c5c;
+  --color-info: #4da3ff;
 
-  /* Tint latar + teks gelap untuk badge status */
-  --color-success-50: #e7f2ec;
-  --color-success-700: #22603f;
-  --color-warning-50: #fbf1e0;
-  --color-warning-700: #7a4d0b;
-  --color-danger-50: #f9e7e5;
-  --color-danger-700: #8c2a20;
-  --color-info-50: #e6edf6;
-  --color-navy-50: #e9edf3;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "Barlow", system-ui, sans-serif;
 
-  --font-display: "Playfair Display", serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
 
-  --shadow-card: 0 1px 2px rgba(15, 27, 45, 0.06);
-  --shadow-raised: 0 8px 24px rgba(15, 27, 45, 0.1);
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--color-ivory);
-  color: var(--color-navy-900);
+  background: var(--color-ink);
+  color: var(--color-fg);
   font-family: var(--font-sans);
 }
 ```
@@ -243,17 +233,17 @@ Pakai nama dan nilai warna yang sama persis. Cek dokumentasi NativeWind untuk ve
 theme: {
   extend: {
     colors: {
-      ivory: '#F7F4EE', surface: '#FFFFFF',
-      navy: { 900: '#0F1B2D', 800: '#1B2B45', 600: '#2C4163', 50: '#E9EDF3' },
-      gold: { 500: '#C9A24B', 600: '#A8842F', 300: '#E3C77D', 100: '#F5EBCF' },
-      muted: '#5B6574', line: '#E3DDD0',
-      success: { DEFAULT: '#2F7D5B', 50: '#E7F2EC', 700: '#22603F' },
-      warning: { DEFAULT: '#B7791F', 50: '#FBF1E0', 700: '#7A4D0B' },
-      danger: { DEFAULT: '#B3382C', 50: '#F9E7E5', 700: '#8C2A20' },
-      info: { DEFAULT: '#2C5282', 50: '#E6EDF6' },
+      ink: '#0B0D10', surface: '#14181D', 'surface-2': '#1C2128', line: '#2A3039',
+      fg: '#F2F4F1', muted: '#9AA3AE',
+      volt: { DEFAULT: '#C6FF1A', 600: '#A8E000' },
+      success: '#34D399', warning: '#FFB020', danger: '#FF5C5C', info: '#4DA3FF',
     },
-    fontFamily: { display: ['PlayfairDisplay_600SemiBold'], sans: ['Inter_400Regular'] },
-    borderRadius: { sm: '8px', md: '12px', lg: '16px' },
+    fontFamily: {
+      display: ['BarlowCondensed_800ExtraBold'],
+      'display-italic': ['BarlowCondensed_800ExtraBold_Italic'],
+      sans: ['Barlow_400Regular'],
+    },
+    borderRadius: { sm: '2px', md: '4px', lg: '8px' },
   },
 },
 ```
@@ -264,11 +254,11 @@ theme: {
 
 ## 11. Checklist Visual (sebelum menyelesaikan CP6 / CP11)
 
-Status web (CP6) diperiksa lewat screenshot desktop 1280px dan mobile 390px. Mobile app (CP11) belum dibuat.
+Status web diperiksa lewat screenshot desktop 1280px dan mobile 390px (2026-10-27). Mobile app (CP11) belum dibuat.
 
-- [x] Komposisi warna kira-kira 60 Ivory / 30 Navy / 10 Gold
-- [x] Tidak ada teks emas di atas latar terang (emas di latar terang hanya ikon bintang, garis, latar tombol/badge)
-- [x] Judul memakai Playfair, selain itu Inter
-- [x] Satu CTA emas utama per layar
-- [x] Kontras dan ring fokus lolos AA (teks badge memakai varian 700; ring fokus emas 2px offset 2px)
+- [x] Komposisi kira-kira 60 gelap / 30 teks & garis / 10 Volt
+- [x] Volt hanya untuk CTA, indikator aktif, dan angka sorot (tidak untuk paragraf)
+- [x] Judul, label, angka memakai Barlow Condensed; isi memakai Barlow
+- [x] Satu CTA Volt utama per layar
+- [x] Kontras dan ring fokus lolos AA
 - [ ] Tampilan web dan mobile terasa satu keluarga (menunggu CP11)

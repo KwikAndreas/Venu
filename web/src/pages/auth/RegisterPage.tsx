@@ -67,7 +67,7 @@ export function RegisterPage() {
       footer={
         <>
           Sudah punya akun?{' '}
-          <Link to="/masuk" className="font-medium text-navy-900 underline underline-offset-4">
+          <Link to="/masuk" className="font-medium text-fg underline underline-offset-4">
             Masuk
           </Link>
         </>
@@ -77,17 +77,15 @@ export function RegisterPage() {
         <FormError message={error} />
 
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-navy-900">Daftar sebagai</legend>
+          <legend className="type-label mb-2 text-muted">Daftar sebagai</legend>
           <div className="grid grid-cols-2 gap-3">
             {ROLE_OPTIONS.map(({ value, title, description, icon: Icon }) => {
               const selected = form.role === value;
               return (
                 <label
                   key={value}
-                  className={`flex cursor-pointer flex-col gap-1 rounded-md border p-3 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-500 ${
-                    selected
-                      ? 'border-gold-500 bg-gold-100'
-                      : 'border-line bg-surface hover:border-navy-600'
+                  className={`flex cursor-pointer flex-col gap-1 rounded-md border p-3 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-volt ${
+                    selected ? 'border-volt bg-volt/10' : 'border-line bg-surface hover:border-fg'
                   }`}
                 >
                   <input
@@ -98,8 +96,8 @@ export function RegisterPage() {
                     onChange={() => update('role', value)}
                     className="sr-only"
                   />
-                  <Icon className="size-5 text-navy-900" aria-hidden />
-                  <span className="text-sm font-semibold text-navy-900">{title}</span>
+                  <Icon className="size-5 text-fg" aria-hidden />
+                  <span className="text-sm font-semibold text-fg">{title}</span>
                   <span className="text-xs text-muted">{description}</span>
                 </label>
               );

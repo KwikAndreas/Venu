@@ -92,7 +92,7 @@ export function VenueFormModal({ open, venue, onClose, onSaved }: VenueFormModal
       wide
       footer={
         <>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
+          <Button variant="secondary" onClick={onClose} disabled={saving}>
             Batal
           </Button>
           <Button type="submit" form={FORM_ID} loading={saving}>

@@ -1,4 +1,4 @@
-import { LogOut, Menu, User, X } from 'lucide-react';
+import { LogOut, Menu, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../../auth/auth-context.ts';
@@ -10,32 +10,37 @@ type NavItem = { to: string; label: string; end?: boolean; roles?: Role[] };
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Beranda', end: true },
-  { to: '/cari', label: 'Cari Lapangan' },
+  { to: '/cari', label: 'Lapangan' },
   { to: '/riwayat', label: 'Riwayat', roles: ['penyewa'] },
   { to: '/pemilik', label: 'Dashboard', roles: ['pemilik'] },
   { to: '/admin', label: 'Panel Admin', roles: ['admin'] },
 ];
 
-export function Logo() {
+/** Logo: "VENU" condensed tebal miring dengan garis miring Volt. */
+export function Logo({ size = 'md' }: { size?: 'md' | 'xl' }) {
+  const text = size === 'xl' ? 'text-7xl md:text-9xl' : 'text-3xl';
   return (
-    <Link to="/" className="font-display text-2xl font-semibold tracking-normal text-ivory">
-      Venu<span className="text-gold-500">.</span>
+    <Link
+      to="/"
+      aria-label="Venu, ke beranda"
+      className={`font-display font-extrabold italic uppercase leading-none tracking-tight text-fg ${text}`}
+    >
+      Venu<span className="text-volt">/</span>
     </Link>
   );
 }
 
+const LINK_BASE =
+  'font-display text-base font-bold uppercase tracking-[0.06em] transition-colors duration-150 ease-out';
+
 function navLinkClasses({ isActive }: { isActive: boolean }): string {
-  const state = isActive
-    ? 'border-gold-500 text-ivory'
-    : 'border-transparent text-ivory/75 hover:text-ivory';
-  return `inline-flex h-16 items-center border-b-2 px-1 text-sm font-medium transition-colors duration-150 ease-out ${state}`;
+  const state = isActive ? 'border-volt text-fg' : 'border-transparent text-muted hover:text-fg';
+  return `${LINK_BASE} inline-flex h-16 items-center border-b-[3px] pt-[3px] ${state}`;
 }
 
 function mobileLinkClasses({ isActive }: { isActive: boolean }): string {
-  const state = isActive
-    ? 'border-gold-500 bg-navy-800 text-ivory'
-    : 'border-transparent text-ivory/80';
-  return `flex h-11 items-center border-l-2 px-4 text-sm font-medium ${state}`;
+  const state = isActive ? 'border-volt bg-surface text-fg' : 'border-transparent text-muted';
+  return `${LINK_BASE} flex h-12 items-center border-l-[3px] px-4 ${state}`;
 }
 
 export function Navbar() {
@@ -53,11 +58,11 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-navy-900">
-      <Container className="flex h-16 items-center justify-between gap-6">
+    <header className="sticky top-0 z-40 border-b border-line bg-ink/95 backdrop-blur">
+      <Container className="flex h-16 items-center justify-between gap-8">
         <Logo />
 
-        <nav aria-label="Menu utama" className="hidden flex-1 gap-6 md:flex">
+        <nav aria-label="Menu utama" className="hidden flex-1 gap-7 md:flex">
           {items.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClasses}>
               {item.label}
@@ -70,12 +75,12 @@ export function Navbar() {
             <>
               <Link
                 to="/profil"
-                className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm text-ivory/85 hover:bg-navy-800 hover:text-ivory"
+                className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm text-muted hover:bg-surface-2 hover:text-fg"
               >
-                <User className="size-4" aria-hidden />
+                <UserRound className="size-4" aria-hidden />
                 <span className="max-w-40 truncate">{user.nama}</span>
               </Link>
-              <Button variant="on-dark" size="sm" onClick={handleLogout}>
+              <Button variant="secondary" size="sm" onClick={handleLogout}>
                 <LogOut className="size-4" aria-hidden />
                 Keluar
               </Button>
@@ -84,11 +89,11 @@ export function Navbar() {
             <>
               <Link
                 to="/masuk"
-                className="inline-flex h-10 items-center rounded-md px-3 text-sm font-medium text-ivory/85 hover:text-ivory"
+                className={`${LINK_BASE} inline-flex h-10 items-center px-3 text-muted hover:text-fg`}
               >
                 Masuk
               </Link>
-              <ButtonLink to="/daftar" variant="on-dark" size="sm">
+              <ButtonLink to="/daftar" variant="secondary" size="sm">
                 Daftar
               </ButtonLink>
             </>
@@ -101,7 +106,7 @@ export function Navbar() {
           aria-expanded={menuOpen}
           aria-controls="menu-mobile"
           aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
-          className="flex size-11 items-center justify-center rounded-md text-ivory hover:bg-navy-800 md:hidden"
+          className="flex size-11 items-center justify-center rounded-md text-fg hover:bg-surface-2 md:hidden"
         >
           {menuOpen ? (
             <X className="size-6" aria-hidden />
@@ -112,7 +117,7 @@ export function Navbar() {
       </Container>
 
       {menuOpen && (
-        <div id="menu-mobile" className="border-t border-navy-600 pb-3 md:hidden">
+        <div id="menu-mobile" className="border-t border-line pb-4 md:hidden">
           <nav aria-label="Menu utama (mobile)" className="py-2">
             {items.map((item) => (
               <NavLink
@@ -127,21 +132,21 @@ export function Navbar() {
             ))}
             {user && (
               <NavLink to="/profil" onClick={closeMenu} className={mobileLinkClasses}>
-                Profil ({user.nama})
+                Profil
               </NavLink>
             )}
           </nav>
           <div className="flex gap-2 px-4">
             {user ? (
-              <Button variant="on-dark" size="sm" className="flex-1" onClick={handleLogout}>
+              <Button variant="secondary" size="sm" className="flex-1" onClick={handleLogout}>
                 <LogOut className="size-4" aria-hidden />
-                Keluar
+                Keluar ({user.nama})
               </Button>
             ) : (
               <>
                 <ButtonLink
                   to="/masuk"
-                  variant="on-dark"
+                  variant="secondary"
                   size="sm"
                   className="flex-1"
                   onClick={closeMenu}
@@ -150,7 +155,7 @@ export function Navbar() {
                 </ButtonLink>
                 <ButtonLink
                   to="/daftar"
-                  variant="on-dark"
+                  variant="secondary"
                   size="sm"
                   className="flex-1"
                   onClick={closeMenu}

@@ -72,7 +72,7 @@ export function AdminLogs() {
                 <Td className="whitespace-nowrap text-muted">{formatDateTime(log.created_at)}</Td>
                 <Td>
                   <span
-                    className={`inline-flex items-center gap-1.5 font-medium ${isWarning(log.aksi) ? 'text-danger-700' : ''}`}
+                    className={`inline-flex items-center gap-1.5 font-medium ${isWarning(log.aksi) ? 'text-danger' : ''}`}
                   >
                     {isWarning(log.aksi) && <CircleAlert className="size-4" aria-hidden />}
                     {ACTION_LABELS[log.aksi] ?? log.aksi}

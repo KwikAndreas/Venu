@@ -96,7 +96,7 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
 
   return (
     <Card className="p-5 lg:sticky lg:top-24">
-      <h2 className="type-h2 text-navy-900">Pilih jadwal</h2>
+      <h2 className="type-h2 text-fg">Pilih jadwal</h2>
       <p className="mt-1 text-sm text-muted">
         Slot per jam, maksimal {MAX_BOOKING_HOURS} jam per booking.
       </p>
@@ -112,7 +112,7 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
       />
 
       <div className="mt-5">
-        <p className="mb-2 text-sm font-medium text-navy-900">Jam mulai</p>
+        <p className="type-label mb-2 text-muted">Jam mulai</p>
         {slotsState.error ? (
           <ErrorState message={slotsState.error.message} onRetry={slotsState.reload} />
         ) : !slotsState.data ? (
@@ -129,9 +129,9 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
           />
         )}
         <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-          <span>Putih: tersedia</span>
-          <span>Navy: dipilih</span>
-          <span className="line-through">Dicoret: tidak tersedia</span>
+          <span>Gelap: tersedia</span>
+          <span className="text-volt">Volt: dipilih</span>
+          <span className="line-through">Bergaris: tidak tersedia</span>
         </p>
       </div>
 
@@ -156,10 +156,8 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
           <dd className="font-medium">{formatRupiah(venue.harga_per_jam)}</dd>
         </div>
         <div className="flex justify-between gap-4 border-t border-line pt-3">
-          <dt className="font-medium text-navy-900">Total</dt>
-          <dd className="text-lg font-bold text-navy-900">
-            {formatRupiah(hours * venue.harga_per_jam)}
-          </dd>
+          <dt className="font-medium text-fg">Total</dt>
+          <dd className="type-score text-fg">{formatRupiah(hours * venue.harga_per_jam)}</dd>
         </div>
       </dl>
 

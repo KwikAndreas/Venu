@@ -41,7 +41,7 @@ export function LoginPage() {
       footer={
         <>
           Belum punya akun?{' '}
-          <Link to="/daftar" className="font-medium text-navy-900 underline underline-offset-4">
+          <Link to="/daftar" className="font-medium text-fg underline underline-offset-4">
             Daftar sekarang
           </Link>
         </>

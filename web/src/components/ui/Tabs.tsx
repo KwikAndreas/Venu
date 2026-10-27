@@ -13,13 +13,13 @@ type TabsProps<T extends string> = {
   onChange: (id: T) => void;
 };
 
-/** Tab dengan penanda aktif garis bawah emas, sama seperti menu navbar. */
+/** Tab kapital condensed dengan bar Volt 3px sebagai penanda aktif, sama seperti navbar. */
 export function Tabs<T extends string>({ label, items, active, onChange }: TabsProps<T>) {
   return (
     <div
       role="tablist"
       aria-label={label}
-      className="flex gap-1 overflow-x-auto border-b border-line"
+      className="flex gap-6 overflow-x-auto border-b border-line"
     >
       {items.map(({ id, label: itemLabel, icon: Icon }) => {
         const selected = id === active;
@@ -30,10 +30,8 @@ export function Tabs<T extends string>({ label, items, active, onChange }: TabsP
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(id)}
-            className={`-mb-px inline-flex h-11 items-center gap-2 whitespace-nowrap border-b-2 px-4 text-sm font-medium transition-colors duration-150 ease-out ${
-              selected
-                ? 'border-gold-500 text-navy-900'
-                : 'border-transparent text-muted hover:text-navy-900'
+            className={`-mb-px inline-flex h-12 items-center gap-2 whitespace-nowrap border-b-[3px] font-display text-base font-bold uppercase tracking-[0.04em] transition-colors duration-150 ease-out ${
+              selected ? 'border-volt text-fg' : 'border-transparent text-muted hover:text-fg'
             }`}
           >
             <Icon className="size-4" aria-hidden />

@@ -1,11 +1,11 @@
-import { RotateCcw, Search, SearchX, SlidersHorizontal } from 'lucide-react';
+import { RotateCcw, SearchX, SlidersHorizontal } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { Button } from '../components/ui/Button.tsx';
 import { EmptyState, ErrorState } from '../components/ui/Feedback.tsx';
 import { SelectField, TextField } from '../components/ui/Field.tsx';
-import { Card, Container, PageHeader } from '../components/ui/Layout.tsx';
-import { VenueGrid, VenueGridSkeleton } from '../components/venue/VenueGrid.tsx';
+import { Container, PageHeader } from '../components/ui/Layout.tsx';
+import { VenueList, VenueListSkeleton } from '../components/venue/VenueList.tsx';
 import { useApi } from '../hooks/useApi.ts';
 import { SPORT_LABELS, SPORTS } from '../lib/format.ts';
 import type { Venue } from '../lib/types.ts';
@@ -22,6 +22,11 @@ const SORT_OPTIONS = [
   { value: 'nama', label: 'Nama (A–Z)' },
 ];
 
+const SPORT_TABS = [
+  { value: '', label: 'Semua' },
+  ...SPORTS.map((s) => ({ value: s, label: SPORT_LABELS[s] })),
+];
+
 function readFilters(params: URLSearchParams): Filters {
   return Object.fromEntries(FILTER_KEYS.map((key) => [key, params.get(key) ?? ''])) as Filters;
 }
@@ -34,7 +39,8 @@ function toApiQuery(filters: Filters): string {
   return query.toString();
 }
 
-function FilterPanel({
+/** Strip filter horizontal: tab olahraga di atas, kolom pencarian di bawahnya. */
+function FilterStrip({
   initial,
   onApply,
   onReset,
@@ -44,6 +50,7 @@ function FilterPanel({
   onReset: () => void;
 }) {
   const [filters, setFilters] = useState(initial);
+  const [showMore, setShowMore] = useState(Boolean(initial.harga_min || initial.harga_max));
   const update = (key: FilterKey, value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
 
@@ -52,40 +59,40 @@ function FilterPanel({
     onApply(filters);
   };
 
+  // Tab olahraga langsung menerapkan filter, seperti berpindah kategori.
+  const chooseSport = (jenis: string) => {
+    const next = { ...filters, jenis };
+    setFilters(next);
+    onApply(next);
+  };
+
   return (
-    <Card className="p-5">
-      <form onSubmit={handleSubmit} aria-label="Filter lapangan" className="space-y-5">
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-navy-900">Olahraga</legend>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: '', label: 'Semua' },
-              ...SPORTS.map((s) => ({ value: s, label: SPORT_LABELS[s] })),
-            ].map((option) => {
-              const selected = filters.jenis === option.value;
-              return (
-                <label
-                  key={option.value || 'semua'}
-                  className={`inline-flex h-10 cursor-pointer items-center rounded-md border px-3 text-sm transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-500 ${
-                    selected
-                      ? 'border-navy-900 bg-navy-900 text-ivory'
-                      : 'border-line bg-surface text-navy-900 hover:border-navy-600'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="jenis"
-                    value={option.value}
-                    checked={selected}
-                    onChange={() => update('jenis', option.value)}
-                    className="sr-only"
-                  />
-                  {option.label}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+    <form onSubmit={handleSubmit} aria-label="Filter lapangan" className="space-y-4">
+      <div
+        role="radiogroup"
+        aria-label="Olahraga"
+        className="flex gap-6 overflow-x-auto border-b border-line"
+      >
+        {SPORT_TABS.map((tab) => {
+          const selected = filters.jenis === tab.value;
+          return (
+            <button
+              key={tab.value || 'semua'}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => chooseSport(tab.value)}
+              className={`-mb-px h-12 whitespace-nowrap border-b-[3px] font-display text-lg font-bold uppercase tracking-[0.04em] transition-colors duration-150 ease-out ${
+                selected ? 'border-volt text-fg' : 'border-transparent text-muted hover:text-fg'
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_200px_auto] lg:items-end">
         <TextField
           label="Nama lapangan"
           placeholder="Contoh: Arena"
@@ -98,28 +105,6 @@ function FilterPanel({
           value={filters.lokasi}
           onChange={(event) => update('lokasi', event.target.value)}
         />
-        <div className="grid grid-cols-2 gap-3">
-          <TextField
-            label="Harga min"
-            type="number"
-            min={0}
-            step={10000}
-            inputMode="numeric"
-            placeholder="Rp"
-            value={filters.harga_min}
-            onChange={(event) => update('harga_min', event.target.value)}
-          />
-          <TextField
-            label="Harga maks"
-            type="number"
-            min={0}
-            step={10000}
-            inputMode="numeric"
-            placeholder="Rp"
-            value={filters.harga_max}
-            onChange={(event) => update('harga_max', event.target.value)}
-          />
-        </div>
         <SelectField
           label="Urutkan"
           value={filters.urut || 'terbaru'}
@@ -131,24 +116,63 @@ function FilterPanel({
             </option>
           ))}
         </SelectField>
-        <div className="flex flex-col gap-2">
-          <Button type="submit">
-            <Search className="size-4" aria-hidden />
-            Terapkan Filter
+        <div className="flex gap-2">
+          <Button type="submit" className="flex-1 lg:flex-none">
+            Terapkan
           </Button>
-          <Button variant="ghost" onClick={onReset}>
-            <RotateCcw className="size-4" aria-hidden />
-            Reset
+          <Button
+            variant="secondary"
+            size="icon"
+            className="size-11"
+            onClick={() => setShowMore((open) => !open)}
+            aria-expanded={showMore}
+            aria-controls="filter-harga"
+            aria-label="Filter harga"
+            title="Filter harga"
+          >
+            <SlidersHorizontal className="size-5" aria-hidden />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11"
+            onClick={onReset}
+            aria-label="Reset filter"
+            title="Reset filter"
+          >
+            <RotateCcw className="size-5" aria-hidden />
           </Button>
         </div>
-      </form>
-    </Card>
+      </div>
+
+      {showMore && (
+        <div id="filter-harga" className="grid max-w-md grid-cols-2 gap-3">
+          <TextField
+            label="Harga min (Rp)"
+            type="number"
+            min={0}
+            step={10000}
+            inputMode="numeric"
+            value={filters.harga_min}
+            onChange={(event) => update('harga_min', event.target.value)}
+          />
+          <TextField
+            label="Harga maks (Rp)"
+            type="number"
+            min={0}
+            step={10000}
+            inputMode="numeric"
+            value={filters.harga_max}
+            onChange={(event) => update('harga_max', event.target.value)}
+          />
+        </div>
+      )}
+    </form>
   );
 }
 
 export function SearchPage() {
   const [params, setParams] = useSearchParams();
-  const [showFilters, setShowFilters] = useState(false);
   const filters = readFilters(params);
   const tanggal = params.get('tanggal') ?? undefined;
   const { data, error, loading, reload } = useApi<{ venues: Venue[] }>(
@@ -159,65 +183,51 @@ export function SearchPage() {
     const updated = new URLSearchParams(toApiQuery(next));
     if (tanggal) updated.set('tanggal', tanggal);
     setParams(updated);
-    setShowFilters(false);
   };
   const resetFilters = () => setParams(tanggal ? { tanggal } : {});
 
   return (
-    <Container className="py-10">
+    <Container className="space-y-8 py-10">
       <PageHeader
         eyebrow="Cari lapangan"
-        title="Temukan lapangan"
-        description="Pilih olahraga, lokasi, dan rentang harga yang sesuai."
-        actions={
-          <Button
-            variant="outline"
-            className="lg:hidden"
-            onClick={() => setShowFilters((open) => !open)}
-            aria-expanded={showFilters}
-            aria-controls="panel-filter"
-          >
-            <SlidersHorizontal className="size-4" aria-hidden />
-            Filter
-          </Button>
-        }
+        title="Semua lapangan"
+        description="Pilih cabang olahraga, lalu persempit dengan lokasi atau harga."
       />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside id="panel-filter" className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
-          {/* key memaksa form diisi ulang dari URL setiap kali filter di URL berubah. */}
-          <FilterPanel
-            key={params.toString()}
-            initial={filters}
-            onApply={applyFilters}
-            onReset={resetFilters}
-          />
-        </aside>
+      {/* key memaksa form diisi ulang dari URL setiap kali filter di URL berubah. */}
+      <FilterStrip
+        key={params.toString()}
+        initial={filters}
+        onApply={applyFilters}
+        onReset={resetFilters}
+      />
 
-        <section aria-live="polite">
-          {error ? (
-            <ErrorState message={error.message} onRetry={reload} />
-          ) : loading || !data ? (
-            <VenueGridSkeleton />
-          ) : data.venues.length === 0 ? (
-            <EmptyState
-              icon={SearchX}
-              title="Lapangan tidak ditemukan"
-              description="Coba ubah atau hapus beberapa filter."
-              action={
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset filter
-                </Button>
-              }
-            />
-          ) : (
-            <>
-              <p className="mb-4 text-sm text-muted">{data.venues.length} lapangan ditemukan</p>
-              <VenueGrid venues={data.venues} tanggal={tanggal} />
-            </>
-          )}
-        </section>
-      </div>
+      <section aria-live="polite">
+        {error ? (
+          <ErrorState message={error.message} onRetry={reload} />
+        ) : loading || !data ? (
+          <VenueListSkeleton />
+        ) : data.venues.length === 0 ? (
+          <EmptyState
+            icon={SearchX}
+            title="Tidak ada lapangan"
+            description="Coba ubah atau hapus beberapa filter."
+            action={
+              <Button variant="secondary" onClick={resetFilters}>
+                Reset filter
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <p className="type-label mb-3 text-muted">
+              <span className="text-fg">{String(data.venues.length).padStart(2, '0')}</span>{' '}
+              lapangan ditemukan
+            </p>
+            <VenueList venues={data.venues} tanggal={tanggal} />
+          </>
+        )}
+      </section>
     </Container>
   );
 }

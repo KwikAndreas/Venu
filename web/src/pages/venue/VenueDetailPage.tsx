@@ -65,7 +65,7 @@ export function VenueDetailPage() {
     <Container className="py-8">
       <Link
         to="/cari"
-        className="mb-6 inline-flex h-11 items-center gap-1 text-sm font-medium text-muted hover:text-navy-900"
+        className="mb-6 inline-flex h-11 items-center gap-1 text-sm font-medium text-muted hover:text-fg"
       >
         <ChevronLeft className="size-4" aria-hidden />
         Kembali ke pencarian
@@ -92,7 +92,7 @@ export function VenueDetailPage() {
                 <SportBadge sport={venue.jenis_olahraga} />
                 <RatingSummary rating={venue.rating_rata} count={venue.jumlah_ulasan} />
               </div>
-              <h1 className="type-h1 mt-3 text-navy-900">{venue.nama}</h1>
+              <h1 className="type-h1 mt-3 text-fg">{venue.nama}</h1>
               <ul className="mt-4 space-y-2 text-sm text-muted">
                 <li className="flex items-start gap-2">
                   <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -111,22 +111,22 @@ export function VenueDetailPage() {
 
             {venue.deskripsi && (
               <section aria-labelledby="judul-deskripsi">
-                <h2 id="judul-deskripsi" className="type-h3 text-navy-900">
+                <h2 id="judul-deskripsi" className="type-h3 text-fg">
                   Tentang lapangan
                 </h2>
-                <p className="mt-2 text-navy-900">{venue.deskripsi}</p>
+                <p className="mt-2 text-fg">{venue.deskripsi}</p>
               </section>
             )}
 
             {venue.fasilitas.length > 0 && (
               <section aria-labelledby="judul-fasilitas">
-                <h2 id="judul-fasilitas" className="type-h3 text-navy-900">
+                <h2 id="judul-fasilitas" className="type-h3 text-fg">
                   Fasilitas
                 </h2>
                 <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                   {venue.fasilitas.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-navy-900">
-                      <span className="flex size-6 items-center justify-center rounded-full bg-gold-100">
+                    <li key={item} className="flex items-center gap-2 text-sm text-fg">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-volt/10">
                         <Check className="size-3.5" aria-hidden />
                       </span>
                       {item}

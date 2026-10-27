@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { CARD_CLASSES } from './styles.ts';
 
@@ -11,6 +10,18 @@ export function Card({ className = '', ...rest }: ComponentProps<'div'>) {
   return <div className={`${CARD_CLASSES} ${className}`} {...rest} />;
 }
 
+/** Label kecil berawalan garis miring Volt, dipakai di atas judul halaman/bagian. */
+export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`type-label text-muted ${className}`}>
+      <span className="mr-1.5 text-volt" aria-hidden>
+        //
+      </span>
+      {children}
+    </p>
+  );
+}
+
 type PageHeaderProps = {
   eyebrow?: string;
   title: string;
@@ -20,10 +31,10 @@ type PageHeaderProps = {
 
 export function PageHeader({ eyebrow, title, description, actions }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        {eyebrow && <p className="type-caption mb-2 text-muted">{eyebrow}</p>}
-        <h1 className="type-h1 text-navy-900">{title}</h1>
+        {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+        <h1 className="type-h1 text-fg">{title}</h1>
         {description && <p className="mt-2 max-w-2xl text-muted">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
@@ -32,22 +43,20 @@ export function PageHeader({ eyebrow, title, description, actions }: PageHeaderP
 }
 
 type StatCardProps = {
-  icon: LucideIcon;
   label: string;
   value: ReactNode;
   note?: string;
+  /** Garis atas Volt; pakai hanya untuk angka terpenting di satu layar. */
+  highlight?: boolean;
 };
 
-/** Angka besar Playfair, label caption muted, ikon dalam lingkaran Gold 100. */
-export function StatCard({ icon: Icon, label, value, note }: StatCardProps) {
+/** Papan skor: label kapital kecil, angka besar condensed tabular, catatan kecil. */
+export function StatCard({ label, value, note, highlight = false }: StatCardProps) {
   return (
-    <Card className="p-5">
-      <div className="mb-4 flex size-10 items-center justify-center rounded-full bg-gold-100">
-        <Icon className="size-5 text-navy-900" aria-hidden />
-      </div>
-      <p className="type-caption text-muted">{label}</p>
-      <p className="mt-1 font-display text-3xl font-semibold text-navy-900">{value}</p>
-      {note && <p className="mt-1 text-xs text-muted">{note}</p>}
+    <Card className={`p-5 ${highlight ? 'border-t-2 border-t-volt' : ''}`}>
+      <p className="type-label text-muted">{label}</p>
+      <p className={`type-score mt-3 ${highlight ? 'text-volt' : 'text-fg'}`}>{value}</p>
+      {note && <p className="mt-2 text-sm text-muted">{note}</p>}
     </Card>
   );
 }

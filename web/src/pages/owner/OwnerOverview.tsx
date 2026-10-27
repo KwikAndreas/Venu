@@ -1,4 +1,3 @@
-import { Banknote, Hourglass, ListChecks, Percent } from 'lucide-react';
 import { useState } from 'react';
 import { ErrorState, Skeleton } from '../../components/ui/Feedback.tsx';
 import { SelectField } from '../../components/ui/Field.tsx';
@@ -48,25 +47,22 @@ export function OwnerOverview() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              icon={ListChecks}
               label="Total booking"
               value={data.ringkasan.jumlah_booking}
               note={`${data.ringkasan.booking_terkonfirmasi} terkonfirmasi`}
             />
             <StatCard
-              icon={Hourglass}
+              highlight
               label="Perlu diproses"
               value={data.ringkasan.booking_menunggu}
               note="Booking berstatus menunggu"
             />
             <StatCard
-              icon={Banknote}
               label="Pendapatan"
               value={formatRupiah(data.ringkasan.pendapatan)}
               note="Dari pembayaran lunas"
             />
             <StatCard
-              icon={Percent}
               label="Okupansi"
               value={`${data.ringkasan.okupansi_persen}%`}
               note={`${data.ringkasan.jumlah_lapangan} lapangan`}
@@ -74,7 +70,7 @@ export function OwnerOverview() {
           </div>
 
           <section aria-labelledby="judul-per-lapangan" className="space-y-3">
-            <h2 id="judul-per-lapangan" className="type-h3 text-navy-900">
+            <h2 id="judul-per-lapangan" className="type-h3 text-fg">
               Per lapangan
             </h2>
             <Table label="Statistik per lapangan">

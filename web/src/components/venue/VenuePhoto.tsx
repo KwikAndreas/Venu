@@ -1,11 +1,10 @@
-import { CircleDot, Feather, Goal, type LucideIcon } from 'lucide-react';
 import { SPORT_LABELS } from '../../lib/format.ts';
 import type { Sport } from '../../lib/types.ts';
 
-const SPORT_ICONS: Record<Sport, LucideIcon> = {
-  futsal: Goal,
-  badminton: Feather,
-  basket: CircleDot,
+const SPORT_CODES: Record<Sport, string> = {
+  futsal: 'FUT',
+  badminton: 'BDM',
+  basket: 'BSK',
 };
 
 type VenuePhotoProps = {
@@ -13,30 +12,41 @@ type VenuePhotoProps = {
   nama: string;
   sport: Sport;
   className?: string;
+  /** Ukuran kode olahraga pada placeholder. */
+  compact?: boolean;
 };
 
-/** Foto rasio 16:9. Tanpa foto, tampil panel Navy berikon sebagai pengganti. */
-export function VenuePhoto({ fotoUrl, nama, sport, className = '' }: VenuePhotoProps) {
+/** Foto rasio 16:9. Tanpa foto: panel bergaris diagonal dengan kode olahraga besar (DESIGN.md §6). */
+export function VenuePhoto({
+  fotoUrl,
+  nama,
+  sport,
+  className = '',
+  compact = false,
+}: VenuePhotoProps) {
   if (fotoUrl) {
     return (
       <img
         src={fotoUrl}
         alt={`Foto ${nama}`}
         loading="lazy"
-        className={`aspect-video w-full bg-navy-50 object-cover ${className}`}
+        className={`aspect-video w-full bg-surface-2 object-cover ${className}`}
       />
     );
   }
 
-  const Icon = SPORT_ICONS[sport];
   return (
     <div
       role="img"
-      aria-label={`Belum ada foto untuk ${nama}`}
-      className={`flex aspect-video w-full flex-col items-center justify-center gap-2 bg-navy-800 ${className}`}
+      aria-label={`Belum ada foto untuk ${nama} (${SPORT_LABELS[sport]})`}
+      className={`stripes relative flex aspect-video w-full items-center justify-center overflow-hidden bg-surface-2 ${className}`}
     >
-      <Icon className="size-10 text-gold-300" strokeWidth={1.25} aria-hidden />
-      <span className="type-caption text-ivory/70">{SPORT_LABELS[sport]}</span>
+      <span
+        aria-hidden
+        className={`font-display font-extrabold italic uppercase leading-none text-fg/15 ${compact ? 'text-2xl' : 'text-7xl md:text-8xl'}`}
+      >
+        {SPORT_CODES[sport]}
+      </span>
     </div>
   );
 }

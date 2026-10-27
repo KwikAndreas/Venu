@@ -56,13 +56,13 @@ export function ProofModal({
         />
       ) : (
         <div className="flex flex-col items-center gap-4 py-8 text-center">
-          <FileText className="size-10 text-navy-600" aria-hidden />
+          <FileText className="size-10 text-muted" aria-hidden />
           <p className="text-sm text-muted">Bukti bayar berupa dokumen PDF.</p>
           <a
             href={current.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={buttonClasses('outline')}
+            className={buttonClasses('secondary')}
           >
             Buka PDF
           </a>
