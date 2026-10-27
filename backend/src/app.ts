@@ -1,6 +1,9 @@
 import express, { type Express } from 'express';
 import cors from 'cors';
-import { healthRouter } from './routes/health.routes.ts';
+import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
+import { authRouter } from './modules/auth/auth.routes.ts';
+import { healthRouter } from './modules/health/health.routes.ts';
+import { userRouter } from './modules/users/user.routes.ts';
 
 export function createApp(): Express {
   const app = express();
@@ -10,6 +13,11 @@ export function createApp(): Express {
   app.use(express.json());
 
   app.use(healthRouter);
+  app.use('/auth', authRouter);
+  app.use(userRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

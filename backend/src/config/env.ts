@@ -13,4 +13,5 @@ function requireEnv(name: string): string {
 export const env = {
   port: Number(process.env.PORT ?? 4000),
   databaseUrl: requireEnv('DATABASE_URL'),
+  jwtSecret: requireEnv('JWT_SECRET'),
 } as const;
