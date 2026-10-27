@@ -50,7 +50,7 @@ export function Modal({ open, title, onClose, children, footer, wide = false }: 
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`flex max-h-[90vh] w-full flex-col rounded-lg border border-line bg-surface shadow-pop ${wide ? 'max-w-2xl' : 'max-w-md'}`}
+        className={`flex max-h-[90vh] w-full flex-col rounded-2xl border border-line bg-raised shadow-soft ${wide ? 'max-w-2xl' : 'max-w-md'}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4">
           <h2 id={titleId} className="type-h2 text-fg">

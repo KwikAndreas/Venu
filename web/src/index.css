@@ -1,138 +1,151 @@
 @import 'tailwindcss';
 
-/* Token desain Venu "Night Match" — sumber: DESIGN.md §10. Ubah di sini, di mobile, dan di DESIGN.md sekaligus. */
+/*
+ * Token desain Venu — sumber: DESIGN.md §10.
+ * Nilai warna ada di variabel --app-* (terang di :root, gelap di [data-theme='dark']);
+ * Tailwind memakai nama semantik (bg, surface, raised, fg, accent, ...) yang menunjuk ke variabel itu,
+ * sehingga satu kelas otomatis benar di mode terang maupun gelap.
+ */
+:root {
+  color-scheme: light;
+  --app-bg: #fbfaf7;
+  --app-surface: #f3f1ec;
+  --app-raised: #ffffff;
+  --app-line: #e7e3da;
+  --app-fg: #1d1b17;
+  --app-muted: #6c665c;
+  --app-accent: #1f6b45;
+  --app-accent-hover: #185a39;
+  --app-accent-soft: #e6f0ea;
+  --app-on-accent: #ffffff;
+  --app-success: #1f6b45;
+  --app-success-soft: #e6f0ea;
+  --app-warning: #8a5a0b;
+  --app-warning-soft: #fbf1dd;
+  --app-danger: #b42318;
+  --app-danger-soft: #fdecea;
+  --app-info: #2f5b8a;
+  --app-info-soft: #e8eff7;
+  --app-shadow: 0 1px 2px rgb(29 27 23 / 0.05), 0 12px 32px rgb(29 27 23 / 0.07);
+  --app-img-futsal: linear-gradient(160deg, #d8ccb8, #b8a789);
+  --app-img-badminton: linear-gradient(160deg, #c8d3c4, #9db19b);
+  --app-img-basket: linear-gradient(160deg, #d5c8c1, #b09c92);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --app-bg: #151412;
+  --app-surface: #1d1b19;
+  --app-raised: #221f1c;
+  --app-line: #312d29;
+  --app-fg: #eeeae3;
+  --app-muted: #a39b8f;
+  --app-accent: #86c7a1;
+  --app-accent-hover: #9fd4b5;
+  --app-accent-soft: #1b2a22;
+  --app-on-accent: #0f1712;
+  --app-success: #86c7a1;
+  --app-success-soft: #1b2a22;
+  --app-warning: #e8bd6c;
+  --app-warning-soft: #2c2417;
+  --app-danger: #f19a8f;
+  --app-danger-soft: #2f1c1a;
+  --app-info: #9cc0e6;
+  --app-info-soft: #1b2430;
+  --app-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);
+  --app-img-futsal: linear-gradient(160deg, #3a342c, #29241f);
+  --app-img-badminton: linear-gradient(160deg, #2e362e, #222822);
+  --app-img-basket: linear-gradient(160deg, #3a312c, #29221f);
+}
+
+@theme inline {
+  --color-bg: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-raised: var(--app-raised);
+  --color-line: var(--app-line);
+  --color-fg: var(--app-fg);
+  --color-muted: var(--app-muted);
+  --color-accent: var(--app-accent);
+  --color-accent-hover: var(--app-accent-hover);
+  --color-accent-soft: var(--app-accent-soft);
+  --color-on-accent: var(--app-on-accent);
+  --color-success: var(--app-success);
+  --color-success-soft: var(--app-success-soft);
+  --color-warning: var(--app-warning);
+  --color-warning-soft: var(--app-warning-soft);
+  --color-danger: var(--app-danger);
+  --color-danger-soft: var(--app-danger-soft);
+  --color-info: var(--app-info);
+  --color-info-soft: var(--app-info-soft);
+  --shadow-soft: var(--app-shadow);
+}
+
 @theme {
-  --color-ink: #0b0d10;
-  --color-surface: #14181d;
-  --color-surface-2: #1c2128;
-  --color-line: #2a3039;
-  --color-fg: #f2f4f1;
-  --color-muted: #9aa3ae;
-  --color-volt: #c6ff1a;
-  --color-volt-600: #a8e000;
-  --color-success: #34d399;
-  --color-warning: #ffb020;
-  --color-danger: #ff5c5c;
-  --color-info: #4da3ff;
-
-  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  --font-sans: 'Barlow', system-ui, sans-serif;
-
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
-
-  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @layer base {
-  html {
-    color-scheme: dark;
-  }
-
   body {
-    background: var(--color-ink);
-    color: var(--color-fg);
+    background: var(--app-bg);
+    color: var(--app-fg);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    transition:
+      background-color 200ms ease-out,
+      color 200ms ease-out;
   }
 
-  ::selection {
-    background: var(--color-volt);
-    color: var(--color-ink);
-  }
-
-  /* Ring fokus Volt 2px dengan offset 2px untuk semua elemen interaktif. */
   :focus-visible {
-    outline: 2px solid var(--color-volt);
+    outline: 2px solid var(--app-accent);
     outline-offset: 2px;
   }
 }
 
 /* Skala tipografi DESIGN.md §3: ukuran mobile, lalu ukuran web mulai 768px. */
 @layer components {
-  .type-display,
-  .type-h1,
-  .type-h2,
-  .type-h3,
-  .type-score,
-  .type-label {
-    font-family: var(--font-display);
-    text-transform: uppercase;
-  }
   .type-display {
     font-weight: 800;
-    font-style: italic;
-    font-size: 2.75rem;
-    line-height: 2.625rem;
-    letter-spacing: -0.01em;
+    font-size: 2rem;
+    line-height: 2.375rem;
+    letter-spacing: -0.03em;
   }
   .type-h1 {
     font-weight: 800;
-    font-size: 2.125rem;
-    line-height: 2.25rem;
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+    letter-spacing: -0.03em;
   }
   .type-h2 {
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     line-height: 1.75rem;
+    letter-spacing: -0.02em;
   }
   .type-h3 {
     font-weight: 700;
-    font-size: 1.125rem;
+    font-size: 1.0625rem;
     line-height: 1.5rem;
-    letter-spacing: 0.02em;
-  }
-  .type-score {
-    font-weight: 800;
-    font-size: 2rem;
-    line-height: 2rem;
-    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
   .type-label {
-    font-weight: 700;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    letter-spacing: 0.12em;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
   }
 
   @media (width >= 48rem) {
     .type-display {
-      font-size: 4.5rem;
-      line-height: 4.25rem;
+      font-size: 2.75rem;
+      line-height: 3.125rem;
     }
     .type-h1 {
-      font-size: 3rem;
-      line-height: 3rem;
-    }
-    .type-h2 {
-      font-size: 1.875rem;
-      line-height: 2.125rem;
-    }
-    .type-h3 {
-      font-size: 1.25rem;
-      line-height: 1.625rem;
-    }
-    .type-score {
-      font-size: 2.5rem;
+      font-size: 2.125rem;
       line-height: 2.5rem;
     }
-  }
-
-  /* Pola garis diagonal 45° (DESIGN.md §4). */
-  .stripes {
-    background-image: repeating-linear-gradient(
-      -45deg,
-      transparent 0 10px,
-      rgb(242 244 241 / 0.05) 10px 11px
-    );
-  }
-  .stripes-warning {
-    background-image: repeating-linear-gradient(
-      -45deg,
-      var(--color-warning) 0 14px,
-      var(--color-ink) 14px 28px
-    );
+    .type-h2 {
+      font-size: 1.375rem;
+      line-height: 1.875rem;
+    }
   }
 }
 

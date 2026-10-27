@@ -84,8 +84,10 @@ export function RegisterPage() {
               return (
                 <label
                   key={value}
-                  className={`flex cursor-pointer flex-col gap-1 rounded-md border p-3 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-volt ${
-                    selected ? 'border-volt bg-volt/10' : 'border-line bg-surface hover:border-fg'
+                  className={`flex cursor-pointer flex-col gap-1 rounded-xl border p-3 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+                    selected
+                      ? 'border-accent bg-accent-soft'
+                      : 'border-line bg-raised hover:border-fg'
                   }`}
                 >
                   <input

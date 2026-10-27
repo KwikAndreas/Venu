@@ -46,7 +46,7 @@ export function LoginPage() {
   return (
     <AuthCard
       title="Masuk"
-      subtitle="Masuk untuk memesan lapangan dan melihat riwayat booking Anda."
+      subtitle="Masuk untuk memesan lapangan dan melihat bookingmu."
       footer={
         <>
           Belum punya akun?{' '}

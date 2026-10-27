@@ -12,6 +12,7 @@ import {
   insertBooking,
   listBookingSummariesByUser,
   listHeldRanges,
+  listHeldRangesForVenues,
   markBookingCancelled,
   type Booking,
   type BookingSummary,
@@ -69,6 +70,46 @@ export async function getVenueSlots(venueId: number, tanggal: string): Promise<V
   }));
 
   return { venue_id: venue.id, tanggal, harga_per_jam: venue.harga_per_jam, slots };
+}
+
+type OperatingHours = { id: number; jam_buka: string; jam_tutup: string };
+
+/**
+ * Jam mulai yang masih kosong per lapangan pada `tanggal`, opsional mulai dari jam `from`.
+ * Dipakai daftar lapangan agar tiap kartu bisa menampilkan slot kosong tanpa request terpisah.
+ */
+export async function summarizeAvailability(
+  venues: OperatingHours[],
+  tanggal: string,
+  from?: string,
+): Promise<Map<number, string[]>> {
+  assertBookableDate(tanggal, nowInJakarta().date);
+  const fromMinutes = from === undefined ? 0 : toMinutes(from);
+  const heldRows = venues.length
+    ? await listHeldRangesForVenues(
+        pool,
+        venues.map((venue) => venue.id),
+        tanggal,
+      )
+    : [];
+
+  const heldByVenue = new Map<number, TimeRange[]>();
+  for (const row of heldRows) {
+    const ranges = heldByVenue.get(row.venue_id) ?? [];
+    ranges.push(toRange(row.jam_mulai, row.jam_selesai));
+    heldByVenue.set(row.venue_id, ranges);
+  }
+
+  return new Map(
+    venues.map((venue) => {
+      const held = heldByVenue.get(venue.id) ?? [];
+      const free = dailySlots(venue.jam_buka, venue.jam_tutup)
+        .filter((range) => range.start >= fromMinutes && !hasStarted(tanggal, range.start))
+        .filter((range) => !held.some((h) => overlaps(h, range)))
+        .map((range) => toTimeString(range.start));
+      return [venue.id, free];
+    }),
+  );
 }
 
 export function createBooking(userId: number, input: NewBooking): Promise<Booking> {

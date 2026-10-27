@@ -9,8 +9,8 @@ export function NotFoundPage() {
       <EmptyState
         icon={Flag}
         title="Halaman tidak ditemukan"
-        description="Alamat yang Anda buka tidak ada atau sudah dipindahkan."
-        action={<ButtonLink to="/">Kembali ke Beranda</ButtonLink>}
+        description="Alamat yang kamu buka tidak ada atau sudah dipindahkan."
+        action={<ButtonLink to="/">Kembali ke beranda</ButtonLink>}
       />
     </Container>
   );

@@ -12,7 +12,7 @@ const TONE_ICONS = {
   info: Info,
 } as const;
 
-/** Toast: panel surface-2 bergaris kiri Volt dengan ikon status, hilang otomatis setelah 3 detik (DESIGN.md §5). */
+/** Toast: panel surface bergaris kiri Volt dengan ikon status, hilang otomatis setelah 3 detik (DESIGN.md §5). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(1);
@@ -45,14 +45,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               role={toast.tone === 'error' ? 'alert' : 'status'}
-              className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-md border border-line border-l-4 border-l-volt bg-surface-2 px-4 py-3 text-sm text-fg shadow-pop"
+              className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-line border-l-4 border-l-accent bg-surface px-4 py-3 text-sm text-fg shadow-soft"
             >
-              <Icon className="mt-0.5 size-5 shrink-0 text-volt" aria-hidden />
+              <Icon className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
               <p className="flex-1">{toast.message}</p>
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}
-                className="-m-1 rounded-sm p-1 text-fg/70 hover:text-fg"
+                className="-m-1 rounded-lg p-1 text-fg/70 hover:text-fg"
                 aria-label="Tutup notifikasi"
               >
                 <X className="size-4" aria-hidden />

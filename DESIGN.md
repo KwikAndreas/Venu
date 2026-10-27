@@ -1,249 +1,163 @@
-# DESIGN.md — Sistem Desain Venu: "Night Match"
+# DESIGN.md — Sistem Desain Venu: "Galeri Banding"
 
 Satu bahasa visual untuk **web** (React + Tailwind) dan **mobile** (Expo + NativeWind).
-Gaya: **sporty, energik, tegas** — seperti papan skor dan lapangan di bawah lampu stadion malam. Gelap sebagai dasar, satu warna "volt" yang menyala untuk aksi, huruf condensed tebal kapital untuk judul, angka besar ala papan skor.
+Gaya: **modern, tenang, elegan namun membumi**. Bukan neon, bukan glass. Nyaman di **mode terang dan gelap**. Tujuan utama layout: pengguna bisa **langsung menimbang lapangan mana yang dipilih**.
 
-> Riwayat: versi awal (Ivory/Navy/Emas + Playfair, gaya luxury) diganti pada 2026-10-27 atas permintaan user karena terasa generik dan kurang sporty.
+> Riwayat: (1) Ivory/Navy/Emas + Playfair, (2) "Night Match" sporty gelap. Keduanya diganti pada 2026-10-27 atas permintaan user karena terasa generik/terlalu padat. Versi ini adalah kombinasi preview Opsi A (banding cepat) + Opsi B (galeri foto) yang dipilih user.
 
 ---
 
 ## 1. Prinsip
 
-1. **Seperti papan skor:** informasi penting (harga, jam, angka statistik) tampil besar dan tegas memakai huruf condensed dan angka tabular.
-2. **Volt hanya untuk aksi dan sorotan:** warna aksen dipakai hemat untuk CTA, status aktif, dan angka kunci. Bila semua menyala, tidak ada yang menonjol.
-3. **Gerak maju:** garis diagonal, panah, dan judul miring memberi kesan dinamis. Pakai secukupnya, jangan di setiap elemen.
-4. **Mudah dibaca:** kontras memenuhi WCAG AA, target sentuh minimal 44px, isi teks tetap huruf biasa (bukan kapital semua).
-5. **Aman secara UX:** pesan error login generik (tidak membocorkan email terdaftar atau tidak), konfirmasi sebelum aksi destruktif.
-6. **Konsisten lintas platform:** token warna, huruf, jarak, dan radius sama persis di web dan mobile.
+1. **Membantu memutuskan:** harga, rating, fasilitas, dan jam kosong selalu di posisi yang sama pada setiap kartu, sehingga mata bisa membandingkan tanpa membaca ulang. Fitur **Bandingkan** menyandingkan 2–3 lapangan dan menandai nilai terbaik per baris.
+2. **On point, tidak padat:** satu informasi tampil sekali. Konteks yang sudah ada di judul (tanggal, jam) tidak diulang di setiap kartu. Label yang sama di semua item (mis. "Baru") tidak ditampilkan.
+3. **Satu status, satu arti:** status booking dan pembayaran digabung menjadi **satu** label yang menjelaskan keadaan sebenarnya (lihat §5 Status). Tidak boleh ada dua badge yang saling mengulang.
+4. **Yang penting tanpa scroll:** status booking aktif tampil sebagai strip di atas judul halaman Cari, plus angka di menu "Booking saya".
+5. **Tanpa penjelasan tambahan (no-commentary):** antarmuka harus bisa dipahami tanpa legenda atau teks bantuan; tombol hanya muncul bila aksinya memang bisa dilakukan saat itu (mis. "Batalkan" hilang setelah jadwal dimulai, "Beri ulasan" muncul setelah jadwal selesai).
+6. **Aman secara UX:** pesan error login generik, konfirmasi sebelum aksi destruktif, aksi destruktif tidak bersaing visual dengan aksi utama.
 
 ---
 
-## 2. Warna — Aturan 60 / 30 / 10
+## 2. Warna
 
-Palet: **Ink & Asphalt (dasar gelap) · Chalk (teks & garis) · Volt (aksen)**.
+Dasar netral hangat, satu aksen **hijau lapangan**. Setiap token punya nilai terang dan gelap; komponen hanya memakai nama token sehingga otomatis benar di kedua mode.
 
-| Peran       | Porsi   | Token       | Hex       | Dipakai untuk                                                  |
-| ----------- | ------- | ----------- | --------- | -------------------------------------------------------------- |
-| **Dasar**   | **60%** | `ink`       | `#0B0D10` | Latar halaman, navbar, footer                                  |
-|             |         | `surface`   | `#14181D` | Kartu, panel, modal, baris tabel                               |
-|             |         | `surface-2` | `#1C2128` | Input, header tabel, hover, chip tidak aktif                   |
-| **Isi**     | **30%** | `fg`        | `#F2F4F1` | Teks utama, judul, ikon                                        |
-|             |         | `muted`     | `#9AA3AE` | Teks sekunder, label, placeholder                              |
-|             |         | `line`      | `#2A3039` | Garis kartu, pemisah, border input                             |
-| **Aksen**   | **10%** | `volt`      | `#C6FF1A` | Tombol aksi utama, indikator aktif, slot dipilih, angka sorot |
-|             |         | `volt-600`  | `#A8E000` | Hover/pressed tombol volt                                      |
+| Token          | Terang    | Gelap     | Dipakai untuk                                         |
+| -------------- | --------- | --------- | ----------------------------------------------------- |
+| `bg`           | `#FBFAF7` | `#151412` | Latar halaman                                         |
+| `surface`      | `#F3F1EC` | `#1D1B19` | Latar lembut: segmen, chip, strip, header tabel       |
+| `raised`       | `#FFFFFF` | `#221F1C` | Kartu, panel, modal, input                            |
+| `line`         | `#E7E3DA` | `#312D29` | Garis pemisah, border kartu & input                   |
+| `fg`           | `#1D1B17` | `#EEEAE3` | Teks utama, tombol netral                             |
+| `muted`        | `#6C665C` | `#A39B8F` | Teks sekunder, label                                  |
+| `accent`       | `#1F6B45` | `#86C7A1` | Aksi utama, jam kosong, pilihan aktif, nilai terbaik  |
+| `accent-soft`  | `#E6F0EA` | `#1B2A22` | Latar chip jam kosong & penanda "terbaik"             |
+| `on-accent`    | `#FFFFFF` | `#0F1712` | Teks di atas tombol aksen                             |
+| `warning`(+soft) | `#8A5A0B` / `#FBF1DD` | `#E8BD6C` / `#2C2417` | Menunggu pembayaran/konfirmasi |
+| `success`(+soft) | = accent | = accent | Terkonfirmasi, sedang berlangsung |
+| `danger`(+soft)  | `#B42318` / `#FDECEA` | `#F19A8F` / `#2F1C1A` | Ditolak, hapus, batalkan |
+| `info`(+soft)    | `#2F5B8A` / `#E8EFF7` | `#9CC0E6` / `#1B2430` | Informasi netral |
 
-**Semantik (status)** — warna terang karena dipakai di atas latar gelap:
-
-| Token     | Hex       | Pakai                                   |
-| --------- | --------- | --------------------------------------- |
-| `success` | `#34D399` | Dikonfirmasi, lunas                     |
-| `warning` | `#FFB020` | Menunggu, menunggu verifikasi           |
-| `danger`  | `#FF5C5C` | Ditolak, dibatalkan, gagal, hapus       |
-| `info`    | `#4DA3FF` | Selesai, informasi netral               |
-
-Badge status: teks warna semantik + latar warna yang sama dengan opasitas 12% + garis kiri 2px warna yang sama.
-
-**Aturan penggunaan (penting):**
-
-- Gelap (Ink/Asphalt) mendominasi ±60% layar, teks/garis Chalk ±30%, Volt **tidak lebih dari ~10%**.
-- **Teks di atas tombol Volt selalu Ink** (`#0B0D10`), kontras ±16:1.
-- Volt boleh dipakai sebagai warna teks di atas latar gelap (kontras ±16:1), tetapi **jangan untuk paragraf**, hanya angka sorot, label aktif, dan tautan pendek.
-- Status tidak boleh hanya mengandalkan warna: selalu sertakan ikon atau label teks.
-- Tidak ada mode terang di versi ini. `color-scheme: dark` dipakai agar kontrol bawaan browser (kalender, scrollbar) ikut gelap.
-
-Kontras yang sudah dicek: Chalk di Ink ±18:1, Muted di Asphalt ±7:1, Danger di Asphalt ±5.9:1, Volt di Ink ±16:1.
+**Aturan penggunaan:**
+- Aksen hanya untuk: tombol aksi utama (satu per layar), chip jam kosong, item terpilih, dan penanda nilai terbaik.
+- Status selalu teks + titik berwarna, tidak hanya warna.
+- Pengganti foto: gradasi lembut per cabang olahraga (`--app-img-futsal`, `--app-img-badminton`, `--app-img-basket`), ikut tema.
+- Tema mengikuti perangkat sampai pengguna memilih sendiri lewat tombol bulan/matahari di navbar (disimpan di `localStorage`).
 
 ---
 
 ## 3. Tipografi
 
-| Peran           | Font                                  | Dipakai untuk                                        |
-| --------------- | ------------------------------------- | ---------------------------------------------------- |
-| Display / judul | **Barlow Condensed** (600, 700, 800, 800 italic) | Judul halaman, angka statistik, harga, jam slot, label tombol, navigasi |
-| UI / isi        | **Barlow** (400, 500, 600, 700)       | Paragraf, deskripsi, isi form, isi tabel             |
+Satu keluarga huruf: **Plus Jakarta Sans** (400, 500, 600, 700, 800), karya desainer Indonesia. Semua teks *sentence case*, tanpa huruf kapital semua.
 
-Pemasangan:
+| Token     | Web     | Mobile  | Weight | Tracking |
+| --------- | ------- | ------- | ------ | -------- |
+| Display   | 44 / 50 | 32 / 38 | 800    | -3%      |
+| H1        | 34 / 40 | 28 / 34 | 800    | -3%      |
+| H2        | 22 / 30 | 20 / 28 | 700    | -2%      |
+| H3        | 17 / 24 | 17 / 24 | 700    | -1%      |
+| Body      | 15–16 / 24 | 15 / 22 | 400–500 | 0   |
+| Label     | 13 / 18 | 13 / 18 | 500    | 0        |
 
-- Web: `@fontsource/barlow-condensed` dan `@fontsource/barlow`.
-- Mobile: `@expo-google-fonts/barlow-condensed` dan `@expo-google-fonts/barlow`.
-
-Skala (web / mobile):
-
-| Token   | Web     | Mobile  | Font             | Gaya                               |
-| ------- | ------- | ------- | ---------------- | ---------------------------------- |
-| Display | 72 / 68 | 44 / 42 | Barlow Condensed | 800 italic, KAPITAL, tracking -1%  |
-| H1      | 48 / 48 | 34 / 36 | Barlow Condensed | 800, KAPITAL                       |
-| H2      | 30 / 34 | 24 / 28 | Barlow Condensed | 700, KAPITAL                       |
-| H3      | 20 / 26 | 18 / 24 | Barlow Condensed | 700, KAPITAL, tracking +2%         |
-| Score   | 40 / 40 | 32 / 32 | Barlow Condensed | 800, angka tabular                 |
-| Body    | 16 / 24 | 16 / 24 | Barlow           | 400                                |
-| Small   | 14 / 20 | 14 / 20 | Barlow           | 400                                |
-| Label   | 12 / 16 | 12 / 16 | Barlow Condensed | 700, KAPITAL, tracking +12%        |
-
-Judul dan label boleh kapital semua. Paragraf, isi form, dan pesan error **tidak** kapital semua.
+Angka (harga, jam) memakai `tabular-nums` agar sejajar saat dibandingkan.
 
 ---
 
-## 4. Jarak, Radius, Garis
+## 4. Jarak, Radius, Bayangan
 
-- **Grid jarak 4px.** Skala: 4, 8, 12, 16, 24, 32, 48, 64, 96.
-- **Radius kecil dan tegas:** `sm` 2px (badge), `md` 4px (tombol, input, chip), `lg` 8px (kartu, modal). Jangan lebih bulat.
-- **Garis lebih dari bayangan:** border 1px `line`. Bayangan hanya untuk modal dan toast: `0 16px 40px rgba(0,0,0,0.5)`.
-- **Aksen diagonal:** pola garis miring 45° (`repeating-linear-gradient`) dipakai untuk latar placeholder foto, slot tidak tersedia, dan dekorasi hero.
-- **Lebar konten web:** maksimum 1200px, tengah. Mobile: padding horizontal 16.
+- **Grid jarak 4px.** Skala: 4, 8, 12, 16, 20, 24, 32, 40, 56.
+- **Radius:** tombol, pil filter, badge = penuh (`999px`); input & chip = 12px; kartu = 16–18px; panel besar/tabel banding = 24px.
+- **Bayangan** hanya satu (`shadow-soft`) untuk elemen yang mengambang: tab aktif, panel jadwal, baki Bandingkan, menu, modal.
+- **Lebar konten:** maksimum 1160px. Padding horizontal 20px (mobile) / 32px (web).
 
 ---
 
 ## 5. Komponen
 
-**Tombol** (label Barlow Condensed 700, kapital, tracking +4%)
+**Tombol** (`components/ui/styles.ts`): `primary` (aksen), `neutral` (fg di atas bg; "Masuk", baki), `secondary` (bergaris), `ghost`, `danger`, `danger-outline`, `danger-ghost` (aksi destruktif sekunder seperti "Batalkan"). Tinggi 44px (36px kecil). Label *sentence case*.
 
-- _Primer (CTA):_ latar Volt, teks Ink, hover Volt 600, ikon panah di kanan. Satu CTA utama per layar.
-- _Sekunder:_ latar `surface-2`, border `line`, teks `fg`, hover border `fg`.
-- _Ghost:_ tanpa latar, teks `fg`, hover latar `surface-2`.
-- _Destruktif:_ latar Danger, teks Ink. _Pemicu destruktif di daftar:_ garis Danger, teks Danger. Selalu dengan konfirmasi.
-- Tinggi 44px (40px untuk ukuran kecil di tabel). Fokus: ring Volt 2px offset 2px.
+**Pil filter**: select/input asli berbentuk pil (`PILL_CLASSES`), satu baris; di layar sempit digeser horizontal, tidak menumpuk.
 
-**Input**
+**Kartu lapangan** (`VenueCard`): foto 16:10 radius 18px → nama + rating (hanya bila ada ulasan) → kota · 2 fasilitas utama → garis → "Jam kosong" (maks 3 chip + "+n") di kiri, harga per jam di kanan. Pojok kiri atas: maks **satu** label bantu ("Rating tertinggi", "Favorit penyewa", "Termurah"). Pojok kanan atas: toggle "+ Bandingkan" / "✓ Dibandingkan".
 
-- Latar `surface-2`, border `line`, radius 4, tinggi 44px, teks `fg`. Fokus: border Volt. Error: border Danger + pesan di bawah dengan ikon.
-- Label selalu di atas input (Barlow Condensed, kapital kecil).
+**Baki Bandingkan**: pil melayang di bawah layar, berisi thumbnail, "n lapangan dipilih", tombol hapus, dan "Bandingkan" (aktif mulai 2 lapangan, maks 3).
 
-**Baris lapangan ("fixture")** — pengganti kartu seragam
+**Tabel Bandingkan**: kolom per lapangan sama lebar (`table-fixed`), baris: harga per jam, total 2 jam, rating, jam kosong, jam buka, setiap fasilitas (✓ Ada / —). Nilai terbaik diberi penanda hijau ("Termurah", "Tertinggi", "Paling fleksibel").
 
-- Satu baris per lapangan: nomor urut besar (`01`), foto kecil 16:9 atau placeholder bergaris diagonal, nama KAPITAL condensed, kota + badge olahraga, rating, harga besar di kanan, panah. Hover: border kiri Volt dan latar `surface-2`.
-- Di mobile, baris menjadi tumpukan vertikal dengan harga tetap menonjol.
+**Status booking** (`lib/booking-stage.ts` → `StatusBadge`), satu label per booking:
 
-**Badge**
+| Penyewa melihat               | Pemilik melihat        | Kondisi                                  |
+| ----------------------------- | ---------------------- | ---------------------------------------- |
+| Menunggu pembayaran           | Belum dibayar          | status menunggu, belum ada bukti         |
+| Menunggu konfirmasi pemilik   | Perlu dikonfirmasi     | status menunggu, bukti terkirim          |
+| Terkonfirmasi                 | Terkonfirmasi          | dikonfirmasi, belum mulai                |
+| Sedang berlangsung            | Sedang berlangsung     | dikonfirmasi, jam main sedang berjalan   |
+| Selesai                       | Selesai                | jadwal sudah lewat                       |
+| Ditolak pemilik               | Ditolak                | ditolak                                  |
+| Dibatalkan                    | Dibatalkan             | dibatalkan                               |
 
-- Status: teks semantik + latar 12% + garis kiri 2px, label kapital condensed, disertai ikon kecil.
-- Olahraga: garis `line`, teks `fg`, kapital condensed.
+**Strip booking aktif**: status + nama lapangan + jadwal booking terdekat, "+n booking lain" bila ada, dan satu aksi ("Bayar sekarang" / "Lihat detail" / "Lihat semua").
 
-**Navigasi**
+**Pemilih jam**: kotak 44px. Kosong = bergaris tipis, dipilih = aksen, terisi = dicoret & nonaktif. Tanpa legenda.
 
-- _Web:_ navbar Ink tinggi 64px, logo "VENU" condensed 800 italic dengan garis miring Volt, menu kapital condensed, menu aktif ditandai bar Volt 3px di bawah.
-- _Mobile:_ bottom tab bar Ink, ikon aktif Volt, tidak aktif `muted`.
+**Segmen** (cabang olahraga, tab dashboard, filter status): wadah `surface` berbentuk pil, item aktif terangkat (`raised` + `shadow-soft`).
 
-**Papan skor (statistik)**
+**Modal / Toast / Empty state / Skeleton**: modal panel `raised` radius 16; toast bergaris kiri aksen, 3 detik; empty state ikon kecil dalam lingkaran + judul + satu kalimat + satu aksi; loading memakai skeleton.
 
-- Angka besar Barlow Condensed 800 (token Score), label kapital kecil `muted`, garis atas 2px Volt pada kartu yang paling penting saja.
-
-**Tabel**
-
-- Header `surface-2` dengan label kapital, baris dipisah garis `line`, hover `surface-2`. Aksi baris berupa ikon di kanan.
-
-**Pemilih slot jam**
-
-- Kotak 44px berisi jam condensed: tersedia (`surface-2`, border `line`), dipilih (latar Volt, teks Ink), tidak tersedia (pola diagonal, teks `muted` dicoret, nonaktif). Jangan hanya mengandalkan warna.
-
-**Modal / Toast / Empty state / Skeleton**
-
-- Modal: panel `surface` radius 8, border `line`, overlay hitam 70%. Toast: `surface-2` dengan garis kiri warna status + ikon, 3 detik. Empty state: ikon bergaris besar, judul H2, satu tombol aksi. Loading memakai skeleton (`surface-2` berdenyut), bukan spinner layar penuh.
-
-**Banner mode keamanan**
-
-- Saat aplikasi berjalan di mode `before` (rentan), tampil pita peringatan berpola diagonal Warning di atas navbar: "MODE BEFORE — RENTAN, HANYA UNTUK PENGUJIAN LOKAL".
+**Banner mode keamanan**: pita `warning-soft` di atas navbar saat `VITE_SECURITY_MODE=before`.
 
 ---
 
 ## 6. Ikon dan Gambar
 
-- Ikon: **Lucide** (`lucide-react` di web, `lucide-react-native` di mobile), stroke 1.75–2, ukuran 16/20/24.
-- Foto lapangan: tampil tanpa filter berlebihan. Gradien Ink tipis di bawah foto hanya bila ada teks di atasnya.
-- Placeholder tanpa foto: pola diagonal + inisial olahraga besar (mis. "FUT").
-- Jangan campur gaya ikon (hanya satu keluarga).
+- Ikon: **Lucide**, stroke 1.75–2, ukuran 16/18/20.
+- Foto lapangan ditampilkan apa adanya; tanpa foto memakai gradasi per cabang olahraga.
 
-## 7. Gerak (Motion)
+## 7. Gerak
 
-- Durasi 150–200ms, easing `ease-out`. Untuk hover, fokus, buka/tutup modal, dan geser panah CTA 2px saat hover.
-- Hormati `prefers-reduced-motion` (web) dan pengaturan reduce motion (mobile).
-- Tidak ada animasi berkedip atau memantul.
+- 150–200ms `ease-out` untuk hover, fokus, pergantian tema, panah CTA bergeser 2px.
+- Hormati `prefers-reduced-motion`.
 
 ## 8. Aksesibilitas
 
-- Kontras minimal WCAG AA (teks biasa 4.5:1). Pasangan warna di Bagian 2 sudah memenuhi bila aturannya diikuti.
-- Semua elemen interaktif dapat difokus dan punya ring fokus Volt yang terlihat.
-- Gambar punya teks alternatif. Form punya label dan pesan error yang dibacakan pembaca layar.
-- Target sentuh minimal 44x44.
+- Kontras minimal WCAG AA di kedua tema; ring fokus aksen 2px offset 2px.
+- Semua kontrol bisa difokus; segmen memakai `role="radiogroup"`/`tablist` yang sesuai; status tidak hanya warna.
+- Target sentuh minimal 44×44 (kecuali kontrol sekunder di tabel: 40px).
 
 ---
 
 ## 9. Layar Utama
 
-| Layar             | Isi pokok                                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------- |
-| Beranda           | Hero judul display miring + pilihan olahraga besar + pencarian cepat, strip papan skor (jumlah lapangan/kota), daftar fixture lapangan |
-| Cari Lapangan     | Strip filter horizontal (olahraga, nama, lokasi, harga, urutan), daftar fixture                                |
-| Detail Lapangan   | Judul besar, info & fasilitas, panel jadwal (tanggal, grid slot, ringkasan harga ala papan skor), CTA "Pesan"  |
-| Checkout          | Ringkasan booking ala tiket, metode bayar (simulasi), upload bukti bayar                                       |
-| Riwayat           | Daftar booking ala tiket dengan badge status, aksi bayar/batal/ulas                                             |
-| Login / Register  | Panel terpusat di latar Ink berpola diagonal, pesan error generik                                              |
-| Dashboard Pemilik | Papan skor statistik, tabel booking masuk, kelola lapangan                                                     |
-| Panel Admin       | Papan skor ringkasan, tabel user dan lapangan, log aktivitas                                                   |
+| Layar             | Isi pokok                                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| Cari (beranda `/`) | Strip booking aktif, judul "Main di mana …?", pencarian nama + urutan, segmen olahraga + pil kota/tanggal/jam/harga, galeri kartu, baki Bandingkan |
+| Bandingkan        | Tabel 2–3 lapangan berdampingan dengan penanda nilai terbaik                                                |
+| Detail Lapangan   | Foto besar, info & fasilitas, ulasan; panel jadwal (tanggal, jam, total, "Pesan sekarang")                   |
+| Checkout          | Ringkasan booking, metode bayar (simulasi), unggah bukti                                                    |
+| Booking saya      | "Mendatang" dan "Selesai & dibatalkan", satu status per booking, aksi sesuai keadaan                         |
+| Masuk / Daftar    | Kartu terpusat, pesan error generik                                                                         |
+| Dashboard Pemilik | Statistik, booking masuk (satu kolom status), kelola lapangan                                               |
+| Panel Admin       | Statistik, pengguna, lapangan, log aktivitas                                                                |
 
 ---
 
 ## 10. Token Implementasi
 
-**Web — Tailwind v4 (`web/src/index.css`)**
+**Web — Tailwind v4 (`web/src/index.css`)**: nilai di variabel `--app-*` (`:root` = terang, `[data-theme='dark']` = gelap), lalu dipetakan ke nama Tailwind lewat `@theme inline` (`--color-bg: var(--app-bg)`, dst.). Tema awal dipasang skrip kecil di `web/index.html` agar tidak berkedip.
 
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-ink: #0b0d10;
-  --color-surface: #14181d;
-  --color-surface-2: #1c2128;
-  --color-line: #2a3039;
-  --color-fg: #f2f4f1;
-  --color-muted: #9aa3ae;
-  --color-volt: #c6ff1a;
-  --color-volt-600: #a8e000;
-  --color-success: #34d399;
-  --color-warning: #ffb020;
-  --color-danger: #ff5c5c;
-  --color-info: #4da3ff;
-
-  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --font-sans: "Barlow", system-ui, sans-serif;
-
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
-
-  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
-}
-
-html {
-  color-scheme: dark;
-}
-
-body {
-  background: var(--color-ink);
-  color: var(--color-fg);
-  font-family: var(--font-sans);
-}
-```
-
-**Mobile — NativeWind (`mobile/tailwind.config.js`)**
-Pakai nama dan nilai warna yang sama persis. Cek dokumentasi NativeWind untuk versi yang terpasang karena cara konfigurasinya dapat berbeda antar versi.
+**Mobile — NativeWind (`mobile/tailwind.config.js`)**: pakai nama dan nilai yang sama. Mode gelap memakai `dark:` dengan nilai kolom "Gelap" di §2.
 
 ```js
 theme: {
   extend: {
     colors: {
-      ink: '#0B0D10', surface: '#14181D', 'surface-2': '#1C2128', line: '#2A3039',
-      fg: '#F2F4F1', muted: '#9AA3AE',
-      volt: { DEFAULT: '#C6FF1A', 600: '#A8E000' },
-      success: '#34D399', warning: '#FFB020', danger: '#FF5C5C', info: '#4DA3FF',
+      bg: '#FBFAF7', surface: '#F3F1EC', raised: '#FFFFFF', line: '#E7E3DA',
+      fg: '#1D1B17', muted: '#6C665C',
+      accent: { DEFAULT: '#1F6B45', soft: '#E6F0EA' },
+      warning: { DEFAULT: '#8A5A0B', soft: '#FBF1DD' },
+      danger: { DEFAULT: '#B42318', soft: '#FDECEA' },
     },
-    fontFamily: {
-      display: ['BarlowCondensed_800ExtraBold'],
-      'display-italic': ['BarlowCondensed_800ExtraBold_Italic'],
-      sans: ['Barlow_400Regular'],
-    },
-    borderRadius: { sm: '2px', md: '4px', lg: '8px' },
+    fontFamily: { sans: ['PlusJakartaSans_500Medium'], bold: ['PlusJakartaSans_700Bold'] },
   },
 },
 ```
@@ -254,11 +168,12 @@ theme: {
 
 ## 11. Checklist Visual (sebelum menyelesaikan CP6 / CP11)
 
-Status web diperiksa lewat screenshot desktop 1280px dan mobile 390px (2026-10-27). Mobile app (CP11) belum dibuat.
+Diperiksa lewat screenshot desktop 1280px (terang & gelap) dan mobile 390px, 2026-10-27.
 
-- [x] Komposisi kira-kira 60 gelap / 30 teks & garis / 10 Volt
-- [x] Volt hanya untuk CTA, indikator aktif, dan angka sorot (tidak untuk paragraf)
-- [x] Judul, label, angka memakai Barlow Condensed; isi memakai Barlow
-- [x] Satu CTA Volt utama per layar
-- [x] Kontras dan ring fokus lolos AA
+- [x] Tidak ada informasi atau badge yang berulang dalam satu kartu/baris
+- [x] Status booking aktif terlihat tanpa scroll
+- [x] Aksen hanya untuk aksi utama, jam kosong, pilihan, dan nilai terbaik
+- [x] Satu aksi utama per layar; aksi destruktif tidak menonjol
+- [x] Semua teks *sentence case*, sapaan konsisten ("kamu")
+- [x] Mode terang dan gelap sama-sama terbaca (kontras AA)
 - [ ] Tampilan web dan mobile terasa satu keluarga (menunggu CP11)

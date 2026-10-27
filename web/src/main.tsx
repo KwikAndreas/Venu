@@ -1,16 +1,17 @@
-import '@fontsource/barlow/400.css';
-import '@fontsource/barlow/500.css';
-import '@fontsource/barlow/600.css';
-import '@fontsource/barlow/700.css';
-import '@fontsource/barlow-condensed/600.css';
-import '@fontsource/barlow-condensed/700.css';
-import '@fontsource/barlow-condensed/800.css';
-import '@fontsource/barlow-condensed/800-italic.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
 import './index.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
+import { ActiveBookingsProvider } from './bookings/ActiveBookingsProvider.tsx';
+import { ComparePage } from './compare/ComparePage.tsx';
+import { CompareProvider } from './compare/CompareProvider.tsx';
+import { ThemeProvider } from './theme/ThemeProvider.tsx';
 import { AuthProvider } from './auth/AuthProvider.tsx';
 import { RequireRole } from './auth/RequireRole.tsx';
 import { AppLayout } from './components/layout/AppLayout.tsx';
@@ -20,7 +21,6 @@ import { LoginPage } from './pages/auth/LoginPage.tsx';
 import { RegisterPage } from './pages/auth/RegisterPage.tsx';
 import { CheckoutPage } from './pages/CheckoutPage.tsx';
 import { HistoryPage } from './pages/HistoryPage.tsx';
-import { HomePage } from './pages/HomePage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
@@ -31,8 +31,9 @@ const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { path: '/', element: <HomePage /> },
+      { path: '/', element: <SearchPage /> },
       { path: '/cari', element: <SearchPage /> },
+      { path: '/bandingkan', element: <ComparePage /> },
       { path: '/lapangan/:id', element: <VenueDetailPage /> },
       { path: '/masuk', element: <LoginPage /> },
       { path: '/daftar', element: <RegisterPage /> },
@@ -86,10 +87,16 @@ if (!rootElement) throw new Error('Elemen #root tidak ditemukan di index.html');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ToastProvider>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <ActiveBookingsProvider>
+            <CompareProvider>
+              <RouterProvider router={router} />
+            </CompareProvider>
+          </ActiveBookingsProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

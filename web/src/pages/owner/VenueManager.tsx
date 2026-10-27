@@ -78,7 +78,7 @@ export function VenueManager() {
       <div className="flex justify-end">
         <Button onClick={() => setEditing({})}>
           <Plus className="size-4" aria-hidden />
-          Tambah Lapangan
+          Tambah lapangan
         </Button>
       </div>
 
@@ -90,7 +90,7 @@ export function VenueManager() {
         <EmptyState
           icon={Building2}
           title="Belum ada lapangan"
-          description="Tambahkan lapangan pertama Anda agar bisa dipesan penyewa."
+          description="Tambahkan lapangan pertamamu agar bisa dipesan penyewa."
         />
       ) : (
         <Table label="Lapangan saya">
@@ -112,7 +112,7 @@ export function VenueManager() {
                     fotoUrl={venue.foto_url}
                     nama={venue.nama}
                     sport={venue.jenis_olahraga}
-                    className="w-24 rounded-sm [&_svg]:size-5 [&_span]:hidden"
+                    className="w-24 rounded-lg [&_svg]:size-5 [&_span]:hidden"
                   />
                 </Td>
                 <Td>

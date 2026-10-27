@@ -229,14 +229,17 @@ Buka http://localhost:5173. Saat development, Vite meneruskan request `/api/...`
 
 ### Halaman
 
+Tampilan mengikuti tema perangkat (terang/gelap) dan bisa diganti lewat tombol bulan/matahari di navbar.
+
+
 | URL | Halaman | Akses |
 |---|---|---|
-| `/` | Beranda (hero + pencarian cepat + lapangan unggulan) | Publik |
-| `/cari` | Cari lapangan dengan filter | Publik |
+| `/` (juga `/cari`) | Cari lapangan: strip booking aktif, filter olahraga/kota/tanggal/jam/harga, kartu dengan jam kosong, tombol Bandingkan | Publik |
+| `/bandingkan` | Bandingkan 2–3 lapangan berdampingan, nilai terbaik ditandai | Publik |
 | `/lapangan/:id` | Detail lapangan, pilih tanggal & slot, ulasan | Publik (pesan: penyewa) |
 | `/masuk`, `/daftar` | Login & registrasi | Publik |
 | `/booking/:id/bayar` | Checkout: ringkasan, metode bayar, upload bukti | Penyewa |
-| `/riwayat` | Riwayat booking, bayar, batalkan, beri ulasan | Penyewa |
+| `/riwayat` | Booking saya: mendatang & selesai, satu status per booking, bayar/batalkan/beri ulasan | Penyewa |
 | `/profil` | Edit profil & ganti password | Login |
 | `/pemilik` | Dashboard: ringkasan, booking masuk, lapangan saya | Pemilik |
 | `/admin` | Panel admin: pengguna, lapangan, log aktivitas | Admin |
@@ -316,7 +319,7 @@ Semua body request berformat JSON, kecuali endpoint upload yang memakai `multipa
 
 | Method | Endpoint | Akses | Keterangan |
 |---|---|---|---|
-| GET | `/venues` | Publik | Query: `jenis`, `q`, `lokasi`, `harga_min`, `harga_max`, `urut` (`terbaru`/`harga_terendah`/`harga_tertinggi`/`nama`) |
+| GET | `/venues` | Publik | Query: `jenis`, `q`, `lokasi`, `harga_min`, `harga_max`, `urut` (`terbaru`/`harga_terendah`/`harga_tertinggi`/`nama`). Tambahkan `tanggal=YYYY-MM-DD` (opsional `mulai=JJ:MM`) agar tiap lapangan membawa `slot_kosong` (jam mulai yang masih kosong) |
 | GET | `/venues/:id` | Publik | Detail lapangan |
 | GET | `/venues/:id/slots` | Publik | Query: `tanggal=YYYY-MM-DD` (default hari ini) |
 | GET | `/venues/mine` | Pemilik | Lapangan milik sendiri |

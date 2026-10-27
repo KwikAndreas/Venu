@@ -32,11 +32,11 @@ function DetailSkeleton() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
       <div className="space-y-4">
-        <Skeleton className="aspect-video w-full rounded-lg" />
+        <Skeleton className="aspect-video w-full rounded-2xl" />
         <Skeleton className="h-10 w-2/3" />
         <Skeleton className="h-24 w-full" />
       </div>
-      <Skeleton className="h-96 w-full rounded-lg" />
+      <Skeleton className="h-96 w-full rounded-2xl" />
     </div>
   );
 }
@@ -64,11 +64,11 @@ export function VenueDetailPage() {
   return (
     <Container className="py-8">
       <Link
-        to="/cari"
-        className="mb-6 inline-flex h-11 items-center gap-1 text-sm font-medium text-muted hover:text-fg"
+        to={`/?tanggal=${tanggal}`}
+        className="mb-4 inline-flex h-10 items-center gap-1 text-sm font-semibold text-muted hover:text-fg"
       >
         <ChevronLeft className="size-4" aria-hidden />
-        Kembali ke pencarian
+        Semua lapangan
       </Link>
 
       {error ? (
@@ -84,7 +84,7 @@ export function VenueDetailPage() {
               fotoUrl={venue.foto_url}
               nama={venue.nama}
               sport={venue.jenis_olahraga}
-              className="rounded-lg border border-line"
+              className="aspect-[16/9] rounded-[22px]"
             />
 
             <div>
@@ -92,7 +92,7 @@ export function VenueDetailPage() {
                 <SportBadge sport={venue.jenis_olahraga} />
                 <RatingSummary rating={venue.rating_rata} count={venue.jumlah_ulasan} />
               </div>
-              <h1 className="type-h1 mt-3 text-fg">{venue.nama}</h1>
+              <h1 className="type-h1 mt-2 text-fg">{venue.nama}</h1>
               <ul className="mt-4 space-y-2 text-sm text-muted">
                 <li className="flex items-start gap-2">
                   <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -126,7 +126,7 @@ export function VenueDetailPage() {
                 <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                   {venue.fasilitas.map((item) => (
                     <li key={item} className="flex items-center gap-2 text-sm text-fg">
-                      <span className="flex size-6 items-center justify-center rounded-full bg-volt/10">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-accent-soft">
                         <Check className="size-3.5" aria-hidden />
                       </span>
                       {item}

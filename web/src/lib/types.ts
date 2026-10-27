@@ -31,6 +31,8 @@ export type Venue = {
   created_at: string;
   rating_rata: number | null;
   jumlah_ulasan: number;
+  /** Jam mulai yang masih kosong; hanya ada bila daftar diminta dengan ?tanggal=. */
+  slot_kosong?: string[];
 };
 
 export type VenueDetail = Venue & { nama_pemilik: string };

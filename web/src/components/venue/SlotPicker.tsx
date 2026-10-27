@@ -7,20 +7,18 @@ type SlotPickerProps = {
 };
 
 /**
- * Kotak 44px per jam, angka condensed ala papan skor. Tersedia: surface-2 bergaris.
- * Dipilih: Volt dengan teks Ink. Tidak tersedia: pola diagonal, dicoret, dan nonaktif,
- * jadi tidak hanya dibedakan lewat warna.
+ * Pilihan jam 44px. Kosong: bergaris tipis. Dipilih: hijau aksen dengan tanda centang tersirat
+ * lewat warna + aria-pressed. Terisi: dicoret dan nonaktif, jadi tidak hanya dibedakan warna.
  */
 export function SlotPicker({ slots, selected, onToggle }: SlotPickerProps) {
   return (
-    <div className="grid grid-cols-4 gap-1.5">
+    <div className="grid grid-cols-4 gap-2">
       {slots.map((slot) => {
         const isSelected = selected.includes(slot.jam_mulai);
         const label = `${slot.jam_mulai}–${slot.jam_selesai}`;
-        let classes = 'border-line bg-surface-2 text-fg hover:border-fg';
-        if (!slot.tersedia)
-          classes = 'stripes border-line/60 bg-surface text-muted/60 line-through';
-        else if (isSelected) classes = 'border-volt bg-volt text-ink';
+        let classes = 'border-line bg-raised text-fg hover:border-muted';
+        if (!slot.tersedia) classes = 'border-transparent bg-surface text-muted/60 line-through';
+        else if (isSelected) classes = 'border-accent bg-accent text-on-accent';
 
         return (
           <button
@@ -28,9 +26,9 @@ export function SlotPicker({ slots, selected, onToggle }: SlotPickerProps) {
             type="button"
             disabled={!slot.tersedia}
             aria-pressed={slot.tersedia ? isSelected : undefined}
-            aria-label={slot.tersedia ? label : `${label}, tidak tersedia`}
+            aria-label={slot.tersedia ? label : `${label}, sudah terisi`}
             onClick={() => onToggle(slot)}
-            className={`h-11 rounded-md border font-display text-lg font-bold tabular-nums transition-colors duration-150 ease-out disabled:cursor-not-allowed ${classes}`}
+            className={`h-11 rounded-xl border text-sm font-semibold tabular-nums transition-colors duration-150 ease-out disabled:cursor-not-allowed ${classes}`}
           >
             {slot.jam_mulai}
           </button>

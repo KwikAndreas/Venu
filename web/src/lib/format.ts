@@ -33,6 +33,27 @@ export function formatDate(date: string): string {
   });
 }
 
+/** "2026-10-31" → "Sab, 31 Okt" (tanpa tahun, untuk teks ringkas). */
+export function formatShortDate(date: string): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+/** Nama hari relatif: "hari ini", "besok", atau "Sab, 31 Okt". */
+export function relativeDay(date: string, today = todayInJakarta()): string {
+  if (date === today) return 'hari ini';
+  if (date === addDays(today, 1)) return 'besok';
+  return formatShortDate(date);
+}
+
+/** 4.8 → "4,8" */
+export function formatRating(rating: number): string {
+  return rating.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('id-ID', {
     timeZone: TIME_ZONE,
@@ -42,6 +63,18 @@ export function formatDateTime(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+/** Tanggal (YYYY-MM-DD) dan jam (JJ:MM) saat ini menurut WIB. */
+export function nowInJakarta(): { date: string; time: string } {
+  const now = new Date();
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone: TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(now);
+  return { date: todayInJakarta(), time };
 }
 
 /** Tanggal hari ini (YYYY-MM-DD) menurut WIB, sama dengan acuan backend. */

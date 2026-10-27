@@ -89,7 +89,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-sm text-muted hover:text-fg"
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-muted hover:text-fg"
           aria-label={visible ? 'Sembunyikan password' : 'Tampilkan password'}
         >
           <Icon className="size-5" aria-hidden />

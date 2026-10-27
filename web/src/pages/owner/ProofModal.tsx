@@ -52,7 +52,7 @@ export function ProofModal({
         <img
           src={current.url}
           alt="Bukti bayar dari penyewa"
-          className="max-h-[60vh] w-full rounded-md border border-line object-contain"
+          className="max-h-[60vh] w-full rounded-xl border border-line object-contain"
         />
       ) : (
         <div className="flex flex-col items-center gap-4 py-8 text-center">

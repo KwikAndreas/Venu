@@ -35,7 +35,7 @@ export function RequireRole({ roles, children }: { roles?: Role[]; children: Rea
         <EmptyState
           icon={ShieldCheck}
           title="Halaman tidak tersedia"
-          description="Akun Anda tidak memiliki akses ke halaman ini."
+          description="Akunmu tidak punya akses ke halaman ini."
           action={<ButtonLink to={homePathFor(user.role)}>Kembali ke beranda</ButtonLink>}
         />
       </Container>

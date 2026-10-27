@@ -4,7 +4,7 @@ import { Button } from './Button.tsx';
 
 /** Placeholder pemuatan; dipakai sebagai pengganti spinner layar penuh. */
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div aria-hidden className={`animate-pulse rounded-md bg-surface-2 ${className}`} />;
+  return <div aria-hidden className={`animate-pulse rounded-2xl bg-surface ${className}`} />;
 }
 
 type EmptyStateProps = {
@@ -14,14 +14,16 @@ type EmptyStateProps = {
   action?: ReactNode;
 };
 
-/** Ikon bergaris besar di panel berpola diagonal, judul H2, maksimal satu tombol aksi. */
+/** Ikon tipis dalam lingkaran lembut, judul, kalimat singkat, maksimal satu aksi. */
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="stripes flex flex-col items-center rounded-lg border border-dashed border-line px-6 py-14 text-center">
-      <Icon className="mb-5 size-12 text-muted" strokeWidth={1.25} aria-hidden />
-      <h2 className="type-h2 text-fg">{title}</h2>
-      {description && <p className="mt-2 max-w-md text-muted">{description}</p>}
-      {action && <div className="mt-6">{action}</div>}
+    <div className="flex flex-col items-center rounded-2xl bg-surface px-6 py-14 text-center">
+      <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-raised">
+        <Icon className="size-5 text-muted" strokeWidth={1.75} aria-hidden />
+      </span>
+      <h2 className="type-h3 text-fg">{title}</h2>
+      {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

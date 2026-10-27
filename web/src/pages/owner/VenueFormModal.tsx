@@ -96,7 +96,7 @@ export function VenueFormModal({ open, venue, onClose, onSaved }: VenueFormModal
             Batal
           </Button>
           <Button type="submit" form={FORM_ID} loading={saving}>
-            {venue ? 'Simpan Perubahan' : 'Tambah Lapangan'}
+            {venue ? 'Simpan perubahan' : 'Tambah lapangan'}
           </Button>
         </>
       }

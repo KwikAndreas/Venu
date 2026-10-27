@@ -1,14 +1,15 @@
 import { Check, Eye, Inbox, X } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '../../components/toast/toast-context.ts';
-import { BookingStatusBadge, PaymentStatusBadge } from '../../components/ui/Badge.tsx';
+import { StatusBadge } from '../../components/ui/Badge.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/ui/Feedback.tsx';
 import { TextAreaField } from '../../components/ui/Field.tsx';
 import { ConfirmDialog } from '../../components/ui/Modal.tsx';
 import { IconAction, Table, Td, Th, Tr } from '../../components/ui/Table.tsx';
 import { useApi } from '../../hooks/useApi.ts';
 import { api, toApiError } from '../../lib/api.ts';
-import { BOOKING_STATUS_LABELS, formatDate, formatRupiah } from '../../lib/format.ts';
+import { ownerStage } from '../../lib/booking-stage.ts';
+import { formatDate, formatRupiah } from '../../lib/format.ts';
 import type { BookingStatus, OwnerBooking } from '../../lib/types.ts';
 import { ProofModal } from './ProofModal.tsx';
 
@@ -20,6 +21,15 @@ const STATUS_FILTERS: StatusFilter[] = [
   'dibatalkan',
   'semua',
 ];
+
+const FILTER_LABELS: Record<StatusFilter, string> = {
+  menunggu: 'Perlu diproses',
+  dikonfirmasi: 'Terkonfirmasi',
+  ditolak: 'Ditolak',
+  dibatalkan: 'Dibatalkan',
+  selesai: 'Selesai',
+  semua: 'Semua',
+};
 
 type PendingAction = { kind: 'confirm' | 'reject'; booking: OwnerBooking };
 
@@ -62,20 +72,23 @@ export function IncomingBookings() {
 
   return (
     <div className="space-y-4">
-      <div role="group" aria-label="Filter status" className="flex flex-wrap gap-2">
+      <div
+        role="radiogroup"
+        aria-label="Tampilkan booking"
+        className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-surface p-1"
+      >
         {STATUS_FILTERS.map((option) => (
           <button
             key={option}
             type="button"
-            aria-pressed={status === option}
+            role="radio"
+            aria-checked={status === option}
             onClick={() => setStatus(option)}
-            className={`h-10 rounded-md border px-3 text-sm transition-colors duration-150 ease-out ${
-              status === option
-                ? 'border-volt bg-volt text-ink'
-                : 'border-line bg-surface text-fg hover:border-fg'
+            className={`h-9 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition duration-150 ease-out ${
+              status === option ? 'bg-raised text-fg shadow-soft' : 'text-muted hover:text-fg'
             }`}
           >
-            {option === 'semua' ? 'Semua' : BOOKING_STATUS_LABELS[option]}
+            {FILTER_LABELS[option]}
           </button>
         ))}
       </div>
@@ -99,7 +112,6 @@ export function IncomingBookings() {
               <Th>Penyewa</Th>
               <Th className="text-right">Total</Th>
               <Th>Status</Th>
-              <Th>Pembayaran</Th>
               <Th className="text-right">Aksi</Th>
             </tr>
           </thead>
@@ -119,10 +131,7 @@ export function IncomingBookings() {
                 </Td>
                 <Td className="text-right font-semibold">{formatRupiah(booking.total_harga)}</Td>
                 <Td>
-                  <BookingStatusBadge status={booking.status} />
-                </Td>
-                <Td>
-                  <PaymentStatusBadge status={booking.payment_status} />
+                  <StatusBadge stage={ownerStage(booking)} />
                 </Td>
                 <Td>
                   <div className="flex justify-end gap-1">

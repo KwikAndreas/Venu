@@ -20,7 +20,6 @@ export function OwnerDashboardPage() {
   return (
     <Container className="space-y-8 py-10">
       <PageHeader
-        eyebrow="Pemilik lapangan"
         title="Dashboard"
         description="Pantau performa lapangan, proses booking yang masuk, dan kelola data lapangan."
       />

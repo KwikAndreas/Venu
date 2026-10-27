@@ -97,6 +97,22 @@ export async function listHeldRanges(
   return rows;
 }
 
+/** Seperti listHeldRanges, tetapi untuk banyak lapangan sekaligus (satu query). */
+export async function listHeldRangesForVenues(
+  db: Db,
+  venueIds: number[],
+  tanggal: string,
+): Promise<{ venue_id: number; jam_mulai: string; jam_selesai: string }[]> {
+  const { rows } = await db.query<{ venue_id: number; jam_mulai: string; jam_selesai: string }>(
+    `SELECT venue_id, to_char(jam_mulai, 'HH24:MI') AS jam_mulai,
+            to_char(jam_selesai, 'HH24:MI') AS jam_selesai
+     FROM bookings
+     WHERE venue_id = ANY($1) AND tanggal = $2 AND status = ANY($3)`,
+    [venueIds, tanggal, SLOT_HOLDING_STATUSES],
+  );
+  return rows;
+}
+
 /** Jumlah booking "menunggu" milik user yang belum punya pembayaran aktif. */
 export async function countUnpaidBookings(db: Db, userId: number): Promise<number> {
   const { rows } = await db.query<{ jumlah: string }>(

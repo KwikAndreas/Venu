@@ -99,8 +99,8 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
             return (
               <label
                 key={value}
-                className={`flex cursor-pointer gap-3 rounded-md border p-4 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-volt ${
-                  selected ? 'border-volt bg-volt/10' : 'border-line hover:border-fg'
+                className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors duration-150 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+                  selected ? 'border-accent bg-accent-soft' : 'border-line hover:border-fg'
                 }`}
               >
                 <input
@@ -134,7 +134,7 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
             onChange={handleFile}
             aria-invalid={fileError ? true : undefined}
             aria-describedby="bukti-info"
-            className="block w-full cursor-pointer rounded-sm border border-line bg-surface text-sm text-muted file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:border-r file:border-line file:bg-surface-2 file:px-4 file:text-sm file:font-medium file:text-fg"
+            className="block w-full cursor-pointer rounded-lg border border-line bg-raised text-sm text-muted file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:border-r file:border-line file:bg-surface file:px-4 file:text-sm file:font-medium file:text-fg"
           />
           <p
             id="bukti-info"
@@ -147,7 +147,7 @@ function PaymentForm({ booking, onPaid }: { booking: BookingSummary; onPaid: () 
 
         <Button type="submit" loading={submitting} className="w-full">
           <Upload className="size-4" aria-hidden />
-          Kirim Bukti Bayar
+          Kirim bukti bayar
         </Button>
       </form>
     </Card>
@@ -161,7 +161,7 @@ function PaymentStatusPanel({ booking }: { booking: BookingSummary }) {
         <EmptyState
           icon={CircleCheck}
           title="Pembayaran lunas"
-          description="Booking Anda sudah dikonfirmasi pemilik. Sampai jumpa di lapangan!"
+          description="Bookingmu sudah dikonfirmasi pemilik. Sampai jumpa di lapangan!"
           action={
             <ButtonLink to="/riwayat" variant="secondary">
               Lihat riwayat
@@ -177,7 +177,7 @@ function PaymentStatusPanel({ booking }: { booking: BookingSummary }) {
         <EmptyState
           icon={Hourglass}
           title="Menunggu verifikasi"
-          description="Bukti bayar sudah terkirim. Pemilik lapangan akan memeriksa dan mengonfirmasi booking Anda."
+          description="Bukti bayar sudah terkirim. Pemilik akan memeriksa lalu mengonfirmasi bookingmu."
           action={
             <ButtonLink to="/riwayat" variant="secondary">
               Lihat riwayat
@@ -213,7 +213,7 @@ export function CheckoutPage() {
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="Checkout" title="Selesaikan pemesanan" />
+      <PageHeader title="Selesaikan pemesanan" />
       <div className="mt-8">
         {error ? (
           <ErrorState message={error.message} onRetry={reload} />

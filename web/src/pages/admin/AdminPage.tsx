@@ -45,7 +45,6 @@ export function AdminPage() {
   return (
     <Container className="space-y-8 py-10">
       <PageHeader
-        eyebrow="Admin"
         title="Panel Admin"
         description="Kelola pengguna dan lapangan, serta pantau aktivitas penting."
       />

@@ -1,15 +1,17 @@
-import { Inbox, Star, Wallet, CircleX } from 'lucide-react';
+import { CalendarX2 } from 'lucide-react';
 import { useState } from 'react';
+import { useActiveBookings } from '../bookings/active-bookings-context.ts';
 import { DateBlock } from '../components/booking/DateBlock.tsx';
 import { useToast } from '../components/toast/toast-context.ts';
-import { BookingStatusBadge, PaymentStatusBadge, SportBadge } from '../components/ui/Badge.tsx';
+import { StatusBadge } from '../components/ui/Badge.tsx';
 import { Button, ButtonLink } from '../components/ui/Button.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/Feedback.tsx';
 import { Card, Container, PageHeader } from '../components/ui/Layout.tsx';
 import { ConfirmDialog } from '../components/ui/Modal.tsx';
 import { useApi } from '../hooks/useApi.ts';
 import { api, toApiError } from '../lib/api.ts';
-import { formatDate, formatRupiah, todayInJakarta } from '../lib/format.ts';
+import { hasEnded, hasStarted, isActiveBooking, renterStage } from '../lib/booking-stage.ts';
+import { formatDate, formatRupiah } from '../lib/format.ts';
 import type { BookingSummary } from '../lib/types.ts';
 
 function needsPayment(booking: BookingSummary): boolean {
@@ -19,68 +21,93 @@ function needsPayment(booking: BookingSummary): boolean {
   );
 }
 
-/** Perkiraan di sisi tampilan; backend tetap menolak bila booking sudah dimulai. */
-function canCancel(booking: BookingSummary, today: string): boolean {
-  return ['menunggu', 'dikonfirmasi'].includes(booking.status) && booking.tanggal >= today;
+/** Bisa dibatalkan selama belum dimulai; backend tetap memeriksa ulang. */
+function canCancel(booking: BookingSummary): boolean {
+  return ['menunggu', 'dikonfirmasi'].includes(booking.status) && !hasStarted(booking);
 }
 
-function canReview(booking: BookingSummary, today: string): boolean {
-  return ['dikonfirmasi', 'selesai'].includes(booking.status) && booking.tanggal <= today;
+/** Ulasan baru masuk akal setelah jadwal main selesai. */
+function canReview(booking: BookingSummary): boolean {
+  return ['dikonfirmasi', 'selesai'].includes(booking.status) && hasEnded(booking);
 }
 
 function BookingRow({ booking, onCancel }: { booking: BookingSummary; onCancel: () => void }) {
-  const today = todayInJakarta();
   return (
-    <Card className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:p-5">
-      <div className="flex gap-4">
+    <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+      <div className="flex min-w-0 flex-1 gap-4">
         <DateBlock date={booking.tanggal} />
-        <div className="min-w-0 space-y-2">
-          <h2 className="type-h3 text-fg">
+        <div className="min-w-0">
+          <h3 className="type-h3 truncate text-fg">
             <span className="sr-only">{formatDate(booking.tanggal)}, </span>
             {booking.venue_nama}
-          </h2>
-          <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="font-display text-2xl font-bold tabular-nums text-fg">
+          </h3>
+          <p className="mt-0.5 text-sm text-muted">
+            <span className="font-semibold tabular-nums text-fg">
               {booking.jam_mulai}–{booking.jam_selesai}
-            </span>
-            <span className="text-sm text-muted">{formatRupiah(booking.total_harga)}</span>
+            </span>{' '}
+            · {booking.venue_kota} · {formatRupiah(booking.total_harga)}
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <SportBadge sport={booking.jenis_olahraga} />
-            <BookingStatusBadge status={booking.status} />
-            <PaymentStatusBadge status={booking.payment_status} />
+          <div className="mt-2.5">
+            <StatusBadge stage={renterStage(booking)} />
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {needsPayment(booking) && (
-          <ButtonLink to={`/booking/${booking.id}/bayar`} variant="secondary" size="sm">
-            <Wallet className="size-4" aria-hidden />
-            Bayar
-          </ButtonLink>
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        {canCancel(booking) && (
+          <Button variant="danger-ghost" size="sm" onClick={onCancel}>
+            Batalkan
+          </Button>
         )}
-        {canReview(booking, today) && (
+        {canReview(booking) && (
           <ButtonLink to={`/lapangan/${booking.venue_id}#ulasan`} variant="secondary" size="sm">
-            <Star className="size-4" aria-hidden />
             Beri ulasan
           </ButtonLink>
         )}
-        {canCancel(booking, today) && (
-          <Button variant="danger-outline" size="sm" onClick={onCancel}>
-            <CircleX className="size-4" aria-hidden />
-            Batalkan
-          </Button>
+        {needsPayment(booking) && (
+          <ButtonLink to={`/booking/${booking.id}/bayar`} size="sm">
+            Bayar sekarang
+          </ButtonLink>
         )}
       </div>
     </Card>
   );
 }
 
+function BookingSection({
+  title,
+  bookings,
+  onCancel,
+}: {
+  title: string;
+  bookings: BookingSummary[];
+  onCancel: (booking: BookingSummary) => void;
+}) {
+  if (bookings.length === 0) return null;
+  return (
+    <section aria-label={title}>
+      <h2 className="type-h3 mb-3 text-fg">{title}</h2>
+      <ul className="space-y-3">
+        {bookings.map((booking) => (
+          <li key={booking.id}>
+            <BookingRow booking={booking} onCancel={() => onCancel(booking)} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function HistoryPage() {
   const { showToast } = useToast();
+  const activeBookings = useActiveBookings();
   const { data, error, reload } = useApi<{ bookings: BookingSummary[] }>('/bookings/mine');
   const [toCancel, setToCancel] = useState<BookingSummary>();
   const [cancelling, setCancelling] = useState(false);
+
+  const upcoming = (data?.bookings ?? [])
+    .filter((booking) => isActiveBooking(booking))
+    .sort((a, b) => `${a.tanggal}${a.jam_mulai}`.localeCompare(`${b.tanggal}${b.jam_mulai}`));
+  const past = (data?.bookings ?? []).filter((booking) => !isActiveBooking(booking));
 
   const confirmCancel = async () => {
     if (!toCancel) return;
@@ -90,6 +117,7 @@ export function HistoryPage() {
       showToast('Booking dibatalkan.', 'success');
       setToCancel(undefined);
       reload();
+      activeBookings.reload();
     } catch (caught) {
       showToast(toApiError(caught).message, 'error');
     } finally {
@@ -99,44 +127,37 @@ export function HistoryPage() {
 
   return (
     <Container className="py-10">
-      <PageHeader
-        eyebrow="Akun saya"
-        title="Riwayat booking"
-        description="Semua pemesanan Anda beserta status pembayarannya."
-      />
-      <div className="mt-8">
+      <PageHeader title="Booking saya" />
+      <div className="mt-8 space-y-10">
         {error ? (
           <ErrorState message={error.message} onRetry={reload} />
         ) : !data ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }, (_, index) => (
-              <Skeleton key={index} className="h-32" />
+              <Skeleton key={index} className="h-28" />
             ))}
           </div>
         ) : data.bookings.length === 0 ? (
           <EmptyState
-            icon={Inbox}
+            icon={CalendarX2}
             title="Belum ada booking"
-            description="Cari lapangan favorit Anda dan pesan jadwal pertama."
-            action={<ButtonLink to="/cari">Cari Lapangan</ButtonLink>}
+            description="Lapangan yang kamu pesan akan muncul di sini."
+            action={<ButtonLink to="/">Cari lapangan</ButtonLink>}
           />
         ) : (
-          <ul className="space-y-3">
-            {data.bookings.map((booking) => (
-              <li key={booking.id}>
-                <BookingRow booking={booking} onCancel={() => setToCancel(booking)} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <BookingSection title="Mendatang" bookings={upcoming} onCancel={setToCancel} />
+            <BookingSection title="Selesai & dibatalkan" bookings={past} onCancel={setToCancel} />
+          </>
         )}
       </div>
 
       <ConfirmDialog
         open={toCancel !== undefined}
-        title="Batalkan booking?"
+        title="Batalkan booking ini?"
         message={
           toCancel &&
-          `Booking ${toCancel.venue_nama} pada ${formatDate(toCancel.tanggal)} pukul ${toCancel.jam_mulai} akan dibatalkan. Pembayaran yang belum diverifikasi akan dianggap gagal.`
+          `${toCancel.venue_nama}, ${formatDate(toCancel.tanggal)} pukul ${toCancel.jam_mulai}. Bukti bayar yang belum diverifikasi ikut dibatalkan.`
         }
         confirmLabel="Ya, batalkan"
         loading={cancelling}

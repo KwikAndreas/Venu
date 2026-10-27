@@ -1,7 +1,7 @@
-import { CalendarDays } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../../auth/auth-context.ts';
+import { useActiveBookings } from '../../bookings/active-bookings-context.ts';
 import { useToast } from '../../components/toast/toast-context.ts';
 import { Button } from '../../components/ui/Button.tsx';
 import { ErrorState, Skeleton } from '../../components/ui/Feedback.tsx';
@@ -11,7 +11,7 @@ import { SlotPicker } from '../../components/venue/SlotPicker.tsx';
 import { useApi } from '../../hooks/useApi.ts';
 import { api, toApiError } from '../../lib/api.ts';
 import { MAX_BOOKING_HOURS, MAX_DAYS_AHEAD } from '../../lib/booking-rules.ts';
-import { addDays, formatDate, formatRupiah, todayInJakarta } from '../../lib/format.ts';
+import { addDays, formatRupiah, formatShortDate, todayInJakarta } from '../../lib/format.ts';
 import type { Booking, Slot, VenueDetail, VenueSlots } from '../../lib/types.ts';
 
 /**
@@ -39,6 +39,7 @@ type BookingPanelProps = {
 export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const activeBookings = useActiveBookings();
   const navigate = useNavigate();
   const location = useLocation();
   const today = todayInJakarta();
@@ -81,6 +82,7 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
         jam_mulai: firstSlot.jam_mulai,
         jam_selesai: lastSlot.jam_selesai,
       });
+      activeBookings.reload();
       navigate(`/booking/${booking.id}/bayar`);
     } catch (caught) {
       const error = toApiError(caught);
@@ -95,11 +97,14 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
   };
 
   return (
-    <Card className="p-5 lg:sticky lg:top-24">
-      <h2 className="type-h2 text-fg">Pilih jadwal</h2>
-      <p className="mt-1 text-sm text-muted">
-        Slot per jam, maksimal {MAX_BOOKING_HOURS} jam per booking.
-      </p>
+    <Card className="p-6 shadow-soft lg:sticky lg:top-24">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="type-h2 text-fg">Pilih jadwal</h2>
+        <p className="text-sm text-muted">
+          <span className="font-bold text-fg">{formatRupiah(venue.harga_per_jam)}</span> / jam
+        </p>
+      </div>
+      <p className="mt-1 text-sm text-muted">Maksimal {MAX_BOOKING_HOURS} jam berturut-turut.</p>
 
       <TextField
         className="mt-5"
@@ -128,36 +133,24 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
             onToggle={toggleSlot}
           />
         )}
-        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-          <span>Gelap: tersedia</span>
-          <span className="text-volt">Volt: dipilih</span>
-          <span className="line-through">Bergaris: tidak tersedia</span>
-        </p>
       </div>
 
       <dl className="mt-6 space-y-2 border-t border-line pt-5 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-muted">Tanggal</dt>
-          <dd className="text-right font-medium">
-            <CalendarDays className="mr-1.5 inline size-4 align-[-3px]" aria-hidden />
-            {formatDate(tanggal)}
+          <dt className="text-muted">Jadwal</dt>
+          <dd className="text-right font-semibold text-fg">
+            {firstSlot && lastSlot ? (
+              `${formatShortDate(tanggal)} · ${firstSlot.jam_mulai}–${lastSlot.jam_selesai}`
+            ) : (
+              <span className="font-normal text-muted">Pilih jam di atas</span>
+            )}
           </dd>
         </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted">Jam</dt>
-          <dd className="font-medium">
-            {firstSlot && lastSlot
-              ? `${firstSlot.jam_mulai}–${lastSlot.jam_selesai} (${hours} jam)`
-              : '—'}
+        <div className="flex items-baseline justify-between gap-4">
+          <dt className="text-muted">Total{hours > 0 && ` (${hours} jam)`}</dt>
+          <dd className="text-2xl font-bold tracking-tight tabular-nums text-fg">
+            {formatRupiah(hours * venue.harga_per_jam)}
           </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted">Harga per jam</dt>
-          <dd className="font-medium">{formatRupiah(venue.harga_per_jam)}</dd>
-        </div>
-        <div className="flex justify-between gap-4 border-t border-line pt-3">
-          <dt className="font-medium text-fg">Total</dt>
-          <dd className="type-score text-fg">{formatRupiah(hours * venue.harga_per_jam)}</dd>
         </div>
       </dl>
 
@@ -167,14 +160,14 @@ export function BookingPanel({ venue, tanggal, onTanggalChange }: BookingPanelPr
         loading={submitting}
         disabled={hours === 0 || (user !== null && !isRenter)}
       >
-        Pesan Sekarang
+        Pesan sekarang
       </Button>
       {user && !isRenter && (
         <p className="mt-2 text-center text-xs text-muted">Pemesanan hanya untuk akun penyewa.</p>
       )}
       {!user && (
         <p className="mt-2 text-center text-xs text-muted">
-          Anda akan diminta masuk sebelum memesan.
+          Kamu akan diminta masuk sebelum memesan.
         </p>
       )}
     </Card>

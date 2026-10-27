@@ -40,7 +40,7 @@ function ProfileForm({ user }: { user: User }) {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-volt/10">
+          <div className="flex size-10 items-center justify-center rounded-full bg-accent-soft">
             <UserRound className="size-5" aria-hidden />
           </div>
           <div>
@@ -65,7 +65,7 @@ function ProfileForm({ user }: { user: User }) {
           onChange={(event) => setEmail(event.target.value)}
         />
         <Button type="submit" loading={saving}>
-          Simpan Perubahan
+          Simpan perubahan
         </Button>
       </form>
     </Card>
@@ -105,7 +105,7 @@ function PasswordForm() {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-volt/10">
+          <div className="flex size-10 items-center justify-center rounded-full bg-accent-soft">
             <KeyRound className="size-5" aria-hidden />
           </div>
           <h2 className="type-h3 text-fg">Ganti password</h2>
@@ -133,7 +133,7 @@ function PasswordForm() {
           onChange={(event) => setKonfirmasi(event.target.value)}
         />
         <Button type="submit" variant="secondary" loading={saving}>
-          Ganti Password
+          Ganti password
         </Button>
       </form>
     </Card>
@@ -146,7 +146,7 @@ export function ProfilePage() {
 
   return (
     <Container className="py-10">
-      <PageHeader eyebrow="Akun saya" title="Profil" />
+      <PageHeader title="Profil" />
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
         {/* key: isi ulang form bila data user berubah dari tempat lain */}
         <ProfileForm key={`${user.nama}|${user.email}`} user={user} />

@@ -1,9 +1,9 @@
-import { MessageSquare, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../../auth/auth-context.ts';
 import { useToast } from '../../components/toast/toast-context.ts';
 import { Button } from '../../components/ui/Button.tsx';
-import { EmptyState, ErrorState, Skeleton } from '../../components/ui/Feedback.tsx';
+import { ErrorState, Skeleton } from '../../components/ui/Feedback.tsx';
 import { TextAreaField } from '../../components/ui/Field.tsx';
 import { Card } from '../../components/ui/Layout.tsx';
 import { ConfirmDialog } from '../../components/ui/Modal.tsx';
@@ -11,8 +11,9 @@ import { IconAction } from '../../components/ui/Table.tsx';
 import { StarDisplay, StarInput } from '../../components/venue/StarRating.tsx';
 import { useApi } from '../../hooks/useApi.ts';
 import { api, toApiError } from '../../lib/api.ts';
+import { hasEnded } from '../../lib/booking-stage.ts';
 import { formatDateTime } from '../../lib/format.ts';
-import type { Review } from '../../lib/types.ts';
+import type { BookingSummary, Review } from '../../lib/types.ts';
 
 const MAX_COMMENT_LENGTH = 1000;
 
@@ -32,8 +33,7 @@ function ReviewForm({ venueId, onCreated }: { venueId: number; onCreated: () => 
         rating,
         komentar: komentar.trim() || undefined,
       });
-      setKomentar('');
-      showToast('Terima kasih, ulasan Anda tersimpan.', 'success');
+      showToast('Terima kasih, ulasanmu sudah tayang.', 'success');
       onCreated();
     } catch (caught) {
       setError(toApiError(caught).message);
@@ -45,28 +45,46 @@ function ReviewForm({ venueId, onCreated }: { venueId: number; onCreated: () => 
   return (
     <Card className="p-5">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <h3 className="type-h3 text-fg">Tulis ulasan</h3>
+        <h3 className="type-h3 text-fg">Bagaimana pengalamanmu bermain di sini?</h3>
         <StarInput value={rating} onChange={setRating} />
         <TextAreaField
-          label="Komentar (opsional)"
+          label="Ceritakan singkat (opsional)"
           maxLength={MAX_COMMENT_LENGTH}
           value={komentar}
           onChange={(event) => setKomentar(event.target.value)}
           error={error}
-          hint="Ulasan hanya bisa diberikan setelah Anda bermain di lapangan ini."
         />
-        <Button type="submit" variant="secondary" loading={submitting}>
-          Kirim Ulasan
+        <Button type="submit" loading={submitting}>
+          Kirim ulasan
         </Button>
       </form>
     </Card>
   );
 }
 
+/**
+ * Form ulasan hanya tampil bagi penyewa yang sudah selesai bermain di lapangan ini
+ * dan belum pernah memberi ulasan; aturan yang sama tetap dicek ulang backend.
+ */
+function useCanReview(venueId: number, reviews: Review[] | undefined): boolean {
+  const { user } = useAuth();
+  const isRenter = user?.role === 'penyewa';
+  const { data } = useApi<{ bookings: BookingSummary[] }>(
+    isRenter ? '/bookings/mine' : null,
+    `user:${user?.id ?? ''}`,
+  );
+  if (!isRenter || !reviews || !data) return false;
+  const played = data.bookings.some(
+    (b) => b.venue_id === venueId && ['dikonfirmasi', 'selesai'].includes(b.status) && hasEnded(b),
+  );
+  return played && !reviews.some((review) => review.user_id === user.id);
+}
+
 export function VenueReviews({ venueId, onChanged }: { venueId: number; onChanged: () => void }) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const { data, error, reload } = useApi<{ reviews: Review[] }>(`/venues/${venueId}/reviews`);
+  const canReview = useCanReview(venueId, data?.reviews);
   const [toDelete, setToDelete] = useState<Review>();
   const [deleting, setDeleting] = useState(false);
 
@@ -94,46 +112,43 @@ export function VenueReviews({ venueId, onChanged }: { venueId: number; onChange
     user !== null && (user.role === 'admin' || user.id === review.user_id);
 
   return (
-    <section id="ulasan" aria-labelledby="judul-ulasan" className="scroll-mt-24 space-y-5">
+    <section id="ulasan" aria-labelledby="judul-ulasan" className="scroll-mt-24 space-y-4">
       <h2 id="judul-ulasan" className="type-h2 text-fg">
         Ulasan
+        {data && data.reviews.length > 0 && (
+          <span className="text-muted"> · {data.reviews.length}</span>
+        )}
       </h2>
 
-      {user?.role === 'penyewa' && <ReviewForm venueId={venueId} onCreated={refresh} />}
+      {canReview && <ReviewForm venueId={venueId} onCreated={refresh} />}
 
       {error ? (
         <ErrorState message={error.message} onRetry={reload} />
       ) : !data ? (
-        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-20 w-full" />
       ) : data.reviews.length === 0 ? (
-        <EmptyState
-          icon={MessageSquare}
-          title="Belum ada ulasan"
-          description="Jadilah yang pertama memberi ulasan."
-        />
+        <p className="text-muted">Belum ada ulasan untuk lapangan ini.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-line">
           {data.reviews.map((review) => (
-            <li key={review.id}>
-              <Card className="flex gap-4 p-5">
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="font-semibold text-fg">{review.nama_user}</span>
-                    <StarDisplay rating={review.rating} />
-                    <span className="text-xs text-muted">{formatDateTime(review.created_at)}</span>
-                  </div>
-                  {/* Komentar ditampilkan sebagai teks biasa; React meng-escape HTML di dalamnya. */}
-                  {review.komentar && <p className="mt-2 text-sm text-fg">{review.komentar}</p>}
+            <li key={review.id} className="flex gap-4 py-4 first:pt-0">
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="font-semibold text-fg">{review.nama_user}</span>
+                  <StarDisplay rating={review.rating} />
+                  <span className="text-xs text-muted">{formatDateTime(review.created_at)}</span>
                 </div>
-                {canDelete(review) && (
-                  <IconAction
-                    icon={Trash2}
-                    label="Hapus ulasan"
-                    tone="danger"
-                    onClick={() => setToDelete(review)}
-                  />
-                )}
-              </Card>
+                {/* Komentar ditampilkan sebagai teks biasa; React meng-escape HTML di dalamnya. */}
+                {review.komentar && <p className="mt-1.5 text-fg">{review.komentar}</p>}
+              </div>
+              {canDelete(review) && (
+                <IconAction
+                  icon={Trash2}
+                  label="Hapus ulasan"
+                  tone="danger"
+                  onClick={() => setToDelete(review)}
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -141,7 +156,7 @@ export function VenueReviews({ venueId, onChanged }: { venueId: number; onChange
 
       <ConfirmDialog
         open={toDelete !== undefined}
-        title="Hapus ulasan?"
+        title="Hapus ulasan ini?"
         message="Ulasan yang dihapus tidak bisa dikembalikan."
         confirmLabel="Hapus"
         loading={deleting}

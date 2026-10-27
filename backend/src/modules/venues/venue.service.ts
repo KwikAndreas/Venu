@@ -1,6 +1,7 @@
 import { IMAGE_TYPES } from '../../lib/file-type.ts';
 import { HttpError } from '../../lib/http-error.ts';
 import { removeUpload, removeUploadsQuietly, saveUpload } from '../../lib/storage.ts';
+import { summarizeAvailability } from '../bookings/booking.service.ts';
 import type { NewVenue, VenueChanges } from './venue.input.ts';
 import {
   deleteVenue,
@@ -18,11 +19,23 @@ import {
 const NOT_FOUND_MESSAGE = 'Lapangan tidak ditemukan';
 const LOCAL_PHOTO_PREFIX = '/uploads/';
 
-export function searchVenues(filter: VenueFilter): Promise<Venue[]> {
+export type AvailabilityQuery = { tanggal: string; mulai?: string };
+
+export type VenueWithAvailability = Venue & { slot_kosong?: string[] };
+
+/** Daftar lapangan; bila `availability` diisi, tiap lapangan membawa jam mulai yang masih kosong. */
+export async function searchVenues(
+  filter: VenueFilter,
+  availability?: AvailabilityQuery,
+): Promise<VenueWithAvailability[]> {
   if (filter.hargaMin && filter.hargaMax && filter.hargaMin > filter.hargaMax) {
     throw new HttpError(400, 'harga_min tidak boleh lebih besar dari harga_max');
   }
-  return listVenues(filter);
+  const venues = await listVenues(filter);
+  if (!availability) return venues;
+
+  const free = await summarizeAvailability(venues, availability.tanggal, availability.mulai);
+  return venues.map((venue) => ({ ...venue, slot_kosong: free.get(venue.id) ?? [] }));
 }
 
 export function getOwnerVenues(ownerId: number): Promise<Venue[]> {

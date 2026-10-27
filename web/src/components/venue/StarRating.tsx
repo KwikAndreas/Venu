@@ -1,17 +1,19 @@
 import { Star } from 'lucide-react';
+import { formatRating } from '../../lib/format.ts';
 
 const STARS = [1, 2, 3, 4, 5] as const;
 
-/** Rata-rata rating + jumlah ulasan. Bintang Volt dipakai sebagai ikon, bukan teks. */
+/** "★ 4,8 (126)". Tanpa ulasan tidak menampilkan apa pun, agar tidak terlihat seperti rating nol. */
 export function RatingSummary({ rating, count }: { rating: number | null; count: number }) {
   if (rating === null || count === 0) {
-    return <span className="text-sm text-muted">Belum ada ulasan</span>;
+    return null;
   }
   return (
-    <span className="inline-flex items-center gap-1 text-sm text-fg">
-      <Star className="size-4 fill-volt text-volt" aria-hidden />
-      <span className="font-semibold">{rating.toFixed(1)}</span>
-      <span className="text-muted">({count} ulasan)</span>
+    <span className="inline-flex items-center gap-1 whitespace-nowrap text-sm">
+      <Star className="size-3.5 fill-current text-fg" aria-hidden />
+      <span className="font-bold text-fg">{formatRating(rating)}</span>
+      <span className="text-muted">({count})</span>
+      <span className="sr-only">ulasan</span>
     </span>
   );
 }
@@ -22,7 +24,7 @@ export function StarDisplay({ rating }: { rating: number }) {
       {STARS.map((star) => (
         <Star
           key={star}
-          className={`size-4 ${star <= rating ? 'fill-volt text-volt' : 'text-line'}`}
+          className={`size-3.5 ${star <= rating ? 'fill-current text-fg' : 'text-line'}`}
           aria-hidden
         />
       ))}
@@ -47,10 +49,10 @@ export function StarInput({
           aria-checked={value === star}
           aria-label={`${star} bintang`}
           onClick={() => onChange(star)}
-          className="flex size-11 items-center justify-center rounded-sm hover:bg-surface-2"
+          className="flex size-11 items-center justify-center rounded-full hover:bg-surface"
         >
           <Star
-            className={`size-6 ${star <= value ? 'fill-volt text-volt' : 'text-muted'}`}
+            className={`size-6 ${star <= value ? 'fill-current text-fg' : 'text-line'}`}
             aria-hidden
           />
         </button>

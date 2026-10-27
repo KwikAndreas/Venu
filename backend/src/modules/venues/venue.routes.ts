@@ -3,7 +3,9 @@ import { HttpError } from '../../lib/http-error.ts';
 import { optionalPositiveInt, parseIdParam, queryValue } from '../../lib/request.ts';
 import { getAuthUser, requireAuth, requireRole } from '../../middleware/auth.ts';
 import { requireUploadedFile, uploadSingleFile } from '../../middleware/upload.ts';
+import { isValidTime } from '../../lib/time.ts';
 import { isSport } from '../../types/sport.ts';
+import { parseDate } from '../bookings/booking.input.ts';
 import { parseNewVenue, parseVenueChanges } from './venue.input.ts';
 import { VENUE_SORTS, type VenueFilter, type VenueSort } from './venue.repository.ts';
 import {
@@ -14,6 +16,7 @@ import {
   replaceVenuePhoto,
   searchVenues,
   updateOwnVenue,
+  type AvailabilityQuery,
 } from './venue.service.ts';
 
 export const venueRouter = Router();
@@ -41,9 +44,21 @@ function parseFilter(query: Record<string, unknown>): VenueFilter {
   };
 }
 
-// Publik: GET /venues?jenis=futsal&q=arena&lokasi=bandung&harga_min=50000&harga_max=200000&urut=harga_terendah
+/** `?tanggal=YYYY-MM-DD[&mulai=JJ:MM]` meminta ringkasan jam kosong per lapangan. */
+function parseAvailability(query: Record<string, unknown>): AvailabilityQuery | undefined {
+  const tanggal = queryValue(query, 'tanggal');
+  if (tanggal === undefined) return undefined;
+  const mulai = queryValue(query, 'mulai');
+  if (mulai !== undefined && !isValidTime(mulai)) {
+    throw new HttpError(400, 'Parameter "mulai" harus berformat JJ:MM');
+  }
+  return { tanggal: parseDate(tanggal), mulai };
+}
+
+// Publik: GET /venues?jenis=futsal&q=arena&lokasi=bandung&harga_max=200000&urut=harga_terendah
+//         &tanggal=2026-10-31&mulai=19:00  (tanggal & mulai opsional → field `slot_kosong`)
 venueRouter.get('/', async (req, res) => {
-  const venues = await searchVenues(parseFilter(req.query));
+  const venues = await searchVenues(parseFilter(req.query), parseAvailability(req.query));
   res.json({ venues });
 });
 

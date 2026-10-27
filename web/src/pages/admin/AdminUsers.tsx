@@ -108,7 +108,7 @@ export function AdminUsers({ onChanged }: { onChanged: () => void }) {
               return (
                 <Tr key={user.id}>
                   <Td className="font-medium">
-                    {user.nama} {isMe && <span className="text-muted">(Anda)</span>}
+                    {user.nama} {isMe && <span className="text-muted">(kamu)</span>}
                   </Td>
                   <Td>{user.email}</Td>
                   <Td>
