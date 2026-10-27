@@ -3,10 +3,13 @@ import express, { type Express } from 'express';
 import cors from 'cors';
 import { UPLOAD_ROOT } from './lib/storage.ts';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
+import { adminRouter } from './modules/admin/admin.routes.ts';
 import { authRouter } from './modules/auth/auth.routes.ts';
 import { bookingRouter } from './modules/bookings/booking.routes.ts';
 import { healthRouter } from './modules/health/health.routes.ts';
+import { ownerRouter } from './modules/owner/owner.routes.ts';
 import { paymentRouter } from './modules/payments/payment.routes.ts';
+import { reviewRouter } from './modules/reviews/review.routes.ts';
 import { userRouter } from './modules/users/user.routes.ts';
 import { venueRouter } from './modules/venues/venue.routes.ts';
 
@@ -34,6 +37,9 @@ export function createApp(): Express {
   app.use('/venues', venueRouter);
   app.use(bookingRouter);
   app.use(paymentRouter);
+  app.use(reviewRouter);
+  app.use('/owner', ownerRouter);
+  app.use('/admin', adminRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

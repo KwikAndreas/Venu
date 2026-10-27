@@ -51,6 +51,25 @@ export async function insertPayment(db: Db, record: PaymentRecord): Promise<Paym
   return created;
 }
 
+/** Pembayaran terakhir yang menunggu verifikasi, dikunci selama transaksi. */
+export async function lockPendingPayment(
+  db: Db,
+  bookingId: number,
+): Promise<{ id: number } | undefined> {
+  const { rows } = await db.query<{ id: number }>(
+    `SELECT id FROM payments
+     WHERE booking_id = $1 AND status = 'menunggu'
+     ORDER BY created_at DESC, id DESC LIMIT 1
+     FOR UPDATE`,
+    [bookingId],
+  );
+  return rows[0];
+}
+
+export async function setPaymentStatus(db: Db, id: number, status: PaymentStatus): Promise<void> {
+  await db.query('UPDATE payments SET status = $2 WHERE id = $1', [id, status]);
+}
+
 /** Pembayaran yang masih menunggu verifikasi dianggap gagal (mis. karena booking dibatalkan). */
 export async function failPendingPayments(db: Db, bookingId: number): Promise<void> {
   await db.query(

@@ -1,4 +1,5 @@
 import { pool } from '../../db/pool.ts';
+import { createWhereBuilder, likePattern, type WhereBuilder } from '../../lib/sql-where.ts';
 import type { Sport } from '../../types/sport.ts';
 import type { NewVenue, VenueChanges } from './venue.input.ts';
 
@@ -16,6 +17,8 @@ export type Venue = {
   foto_url: string | null;
   deskripsi: string | null;
   created_at: Date;
+  rating_rata: number | null;
+  jumlah_ulasan: number;
 };
 
 export type VenueDetail = Venue & { nama_pemilik: string };
@@ -41,37 +44,28 @@ export type VenueFilter = {
 const VENUE_COLUMNS = `
   v.id, v.owner_id, v.nama, v.jenis_olahraga, v.alamat, v.kota, v.harga_per_jam,
   to_char(v.jam_buka, 'HH24:MI') AS jam_buka, to_char(v.jam_tutup, 'HH24:MI') AS jam_tutup,
-  v.fasilitas, v.foto_url, v.deskripsi, v.created_at`;
+  v.fasilitas, v.foto_url, v.deskripsi, v.created_at,
+  (SELECT ROUND(AVG(r.rating), 1)::float8 FROM reviews r WHERE r.venue_id = v.id) AS rating_rata,
+  (SELECT COUNT(*)::int FROM reviews r WHERE r.venue_id = v.id) AS jumlah_ulasan`;
 
-/** Escape karakter wildcard LIKE (% dan _) agar dicari sebagai teks biasa. */
-function likePattern(text: string): string {
-  return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
-}
-
-/** Menyusun klausa WHERE dengan placeholder $1, $2, ... sehingga nilai tidak pernah digabung ke SQL. */
-function buildWhere(filter: VenueFilter): { where: string; params: unknown[] } {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  const add = (toSql: (placeholder: string) => string, value: unknown): void => {
-    params.push(value);
-    conditions.push(toSql(`$${params.length}`));
-  };
-
-  if (filter.jenis) add((p) => `v.jenis_olahraga = ${p}`, filter.jenis);
-  if (filter.nama) add((p) => `v.nama ILIKE ${p}`, likePattern(filter.nama));
-  if (filter.lokasi)
-    add((p) => `(v.kota ILIKE ${p} OR v.alamat ILIKE ${p})`, likePattern(filter.lokasi));
-  if (filter.hargaMin) add((p) => `v.harga_per_jam >= ${p}`, filter.hargaMin);
-  if (filter.hargaMax) add((p) => `v.harga_per_jam <= ${p}`, filter.hargaMax);
-
-  return { where: conditions.length ? `WHERE ${conditions.join(' AND ')}` : '', params };
+function buildWhere(filter: VenueFilter): WhereBuilder {
+  const where = createWhereBuilder();
+  if (filter.jenis) where.add((p) => `v.jenis_olahraga = ${p}`, filter.jenis);
+  if (filter.nama) where.add((p) => `v.nama ILIKE ${p}`, likePattern(filter.nama));
+  if (filter.lokasi) {
+    where.add((p) => `(v.kota ILIKE ${p} OR v.alamat ILIKE ${p})`, likePattern(filter.lokasi));
+  }
+  if (filter.hargaMin) where.add((p) => `v.harga_per_jam >= ${p}`, filter.hargaMin);
+  if (filter.hargaMax) where.add((p) => `v.harga_per_jam <= ${p}`, filter.hargaMax);
+  return where;
 }
 
 export async function listVenues(filter: VenueFilter): Promise<Venue[]> {
-  const { where, params } = buildWhere(filter);
+  const where = buildWhere(filter);
   const { rows } = await pool.query<Venue>(
-    `SELECT ${VENUE_COLUMNS} FROM venues v ${where} ORDER BY ${VENUE_SORTS[filter.urut]}, v.id`,
-    params,
+    `SELECT ${VENUE_COLUMNS} FROM venues v ${where.clause()}
+     ORDER BY ${VENUE_SORTS[filter.urut]}, v.id`,
+    where.params,
   );
   return rows;
 }
@@ -131,6 +125,19 @@ export async function updateVenue(
     params,
   );
   return rows[0];
+}
+
+/** Kunci file upload milik lapangan: foto lokal dan bukti bayar dari booking-nya. */
+export async function listVenueUploadKeys(venueId: number): Promise<string[]> {
+  const { rows } = await pool.query<{ key: string }>(
+    `SELECT substring(foto_url FROM ${'/uploads/'.length + 1}) AS key
+     FROM venues WHERE id = $1 AND foto_url LIKE '/uploads/%'
+     UNION ALL
+     SELECT p.bukti_url FROM payments p JOIN bookings b ON b.id = p.booking_id
+     WHERE b.venue_id = $1 AND p.bukti_url IS NOT NULL`,
+    [venueId],
+  );
+  return rows.map((row) => row.key);
 }
 
 /** Menghapus lapangan milik `ownerId`; false bila tidak ada atau bukan miliknya. */

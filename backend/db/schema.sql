@@ -81,4 +81,6 @@ CREATE INDEX IF NOT EXISTS idx_bookings_user     ON bookings (user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_venue    ON bookings (venue_id, tanggal);
 CREATE INDEX IF NOT EXISTS idx_payments_booking  ON payments (booking_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_venue     ON reviews (venue_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_reviews_user_venue ON reviews (user_id, venue_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_aksi   ON audit_logs (aksi, created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user   ON audit_logs (user_id);

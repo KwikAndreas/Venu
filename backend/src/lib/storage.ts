@@ -47,3 +47,12 @@ export function resolveUpload(key: string): string {
 export async function removeUpload(key: string): Promise<void> {
   await rm(resolveUpload(key), { force: true });
 }
+
+/** Menghapus beberapa file setelah datanya dihapus; kegagalan hanya dicatat di console. */
+export async function removeUploadsQuietly(keys: string[]): Promise<void> {
+  for (const key of keys) {
+    await removeUpload(key).catch((error: unknown) => {
+      console.error(`Gagal menghapus file upload ${key}:`, error);
+    });
+  }
+}

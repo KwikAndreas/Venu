@@ -1,12 +1,13 @@
 import { IMAGE_TYPES } from '../../lib/file-type.ts';
 import { HttpError } from '../../lib/http-error.ts';
-import { removeUpload, saveUpload } from '../../lib/storage.ts';
+import { removeUpload, removeUploadsQuietly, saveUpload } from '../../lib/storage.ts';
 import type { NewVenue, VenueChanges } from './venue.input.ts';
 import {
   deleteVenue,
   findVenueById,
   insertVenue,
   listVenues,
+  listVenueUploadKeys,
   listVenuesByOwner,
   updateVenue,
   type Venue,
@@ -74,6 +75,8 @@ export async function replaceVenuePhoto(
 }
 
 export async function deleteOwnVenue(id: number, ownerId: number): Promise<void> {
+  const uploadKeys = await listVenueUploadKeys(id);
   const deleted = await deleteVenue(id, ownerId);
   if (!deleted) throw new HttpError(404, NOT_FOUND_MESSAGE);
+  await removeUploadsQuietly(uploadKeys);
 }

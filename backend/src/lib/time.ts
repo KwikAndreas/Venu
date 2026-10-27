@@ -31,6 +31,12 @@ export function addDays(date: string, days: number): string {
   return result.toISOString().slice(0, 10);
 }
 
+/** Jumlah hari dari `start` sampai `end`, keduanya ikut dihitung (2026-11-01 s.d. 2026-11-01 = 1). */
+export function daysBetweenInclusive(start: string, end: string): number {
+  const millisPerDay = 24 * 60 * 60 * 1000;
+  return (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / millisPerDay + 1;
+}
+
 /** Tanggal dan menit-sejak-tengah-malam saat ini menurut waktu Jakarta (WIB). */
 export function nowInJakarta(): { date: string; minutes: number } {
   const parts = new Intl.DateTimeFormat('en-CA', {

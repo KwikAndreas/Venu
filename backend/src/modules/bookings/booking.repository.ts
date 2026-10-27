@@ -46,7 +46,7 @@ export type BookingRecord = {
   totalHarga: number;
 };
 
-const BOOKING_COLUMNS = `
+export const BOOKING_COLUMNS = `
   b.id, b.user_id, b.venue_id, to_char(b.tanggal, 'YYYY-MM-DD') AS tanggal,
   to_char(b.jam_mulai, 'HH24:MI') AS jam_mulai, to_char(b.jam_selesai, 'HH24:MI') AS jam_selesai,
   b.status, b.total_harga, b.created_at`;
@@ -155,6 +155,18 @@ export async function listBookingSummariesByUser(userId: number): Promise<Bookin
     [userId],
   );
   return rows;
+}
+
+export async function setBookingStatus(
+  db: Db,
+  id: number,
+  status: BookingStatus,
+): Promise<Booking | undefined> {
+  const { rows } = await db.query<Booking>(
+    `UPDATE bookings AS b SET status = $2 WHERE b.id = $1 RETURNING ${BOOKING_COLUMNS}`,
+    [id, status],
+  );
+  return rows[0];
 }
 
 /** Membatalkan booking hanya bila statusnya masih bisa dibatalkan (dicek ulang di SQL). */

@@ -7,6 +7,10 @@ export const BOOKING_STATUSES = [
 ] as const;
 export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 
+export function isBookingStatus(value: unknown): value is BookingStatus {
+  return typeof value === 'string' && (BOOKING_STATUSES as readonly string[]).includes(value);
+}
+
 /** Status booking yang masih "memegang" slot sehingga slot itu tidak bisa dibooking orang lain. */
 export const SLOT_HOLDING_STATUSES: readonly BookingStatus[] = ['menunggu', 'dikonfirmasi'];
 

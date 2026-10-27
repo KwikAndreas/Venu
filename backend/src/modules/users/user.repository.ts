@@ -36,6 +36,32 @@ export async function findUserById(id: number): Promise<PublicUser | undefined> 
   return rows[0];
 }
 
+export async function findUserWithPasswordById(id: number): Promise<UserWithPassword | undefined> {
+  const { rows } = await pool.query<UserWithPassword>(
+    `SELECT ${PUBLIC_COLUMNS}, password_hash FROM users WHERE id = $1`,
+    [id],
+  );
+  return rows[0];
+}
+
+export type ProfileChanges = Partial<Pick<PublicUser, 'nama' | 'email'>>;
+
+export async function updateUserProfile(
+  id: number,
+  changes: ProfileChanges,
+): Promise<PublicUser | undefined> {
+  const { rows } = await pool.query<PublicUser>(
+    `UPDATE users SET nama = COALESCE($2, nama), email = COALESCE($3, email)
+     WHERE id = $1 RETURNING ${PUBLIC_COLUMNS}`,
+    [id, changes.nama ?? null, changes.email ?? null],
+  );
+  return rows[0];
+}
+
+export async function updateUserPassword(id: number, passwordHash: string): Promise<void> {
+  await pool.query('UPDATE users SET password_hash = $2 WHERE id = $1', [id, passwordHash]);
+}
+
 export async function insertUser(user: NewUser): Promise<PublicUser> {
   const { rows } = await pool.query<PublicUser>(
     `INSERT INTO users (nama, email, password_hash, role)
