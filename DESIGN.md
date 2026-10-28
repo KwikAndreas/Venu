@@ -1,6 +1,6 @@
 # DESIGN.md — Sistem Desain Venu: "Galeri Banding"
 
-Satu bahasa visual untuk **web** (React + Tailwind) dan **mobile** (Expo + NativeWind).
+Satu bahasa visual untuk **web** (React + Tailwind) dan **mobile** (Expo + StyleSheet bertoken).
 Gaya: **modern, tenang, elegan namun membumi**. Bukan neon, bukan glass. Nyaman di **mode terang dan gelap**. Tujuan utama layout: pengguna bisa **langsung menimbang lapangan mana yang dipilih**.
 
 > Riwayat: (1) Ivory/Navy/Emas + Playfair, (2) "Night Match" sporty gelap. Keduanya diganti pada 2026-10-27 atas permintaan user karena terasa generik/terlalu padat. Versi ini adalah kombinasi preview Opsi A (banding cepat) + Opsi B (galeri foto) yang dipilih user.
@@ -145,22 +145,9 @@ Angka (harga, jam) memakai `tabular-nums` agar sejajar saat dibandingkan.
 
 **Web — Tailwind v4 (`web/src/index.css`)**: nilai di variabel `--app-*` (`:root` = terang, `[data-theme='dark']` = gelap), lalu dipetakan ke nama Tailwind lewat `@theme inline` (`--color-bg: var(--app-bg)`, dst.). Tema awal dipasang skrip kecil di `web/index.html` agar tidak berkedip.
 
-**Mobile — NativeWind (`mobile/tailwind.config.js`)**: pakai nama dan nilai yang sama. Mode gelap memakai `dark:` dengan nilai kolom "Gelap" di §2.
+**Mobile — StyleSheet bertoken (`mobile/src/constants/theme.ts`)**: nama token sama dengan web dalam camelCase (`bg`, `surface`, `raised`, `line`, `fg`, `muted`, `accent`, `accentSoft`, `onAccent`, `warning(Soft)`, `danger(Soft)`, `info(Soft)`) dengan nilai kolom "Terang"/"Gelap" di §2 (`PALETTES.light` / `PALETTES.dark`). Komponen membaca warna lewat `useTheme()`; tema ikut perangkat sampai pengguna memilih di tab Akun (disimpan di perangkat). Tipe memakai `TYPE_SCALE` (kolom Mobile di §3) dengan Plus Jakarta Sans dari `@expo-google-fonts/plus-jakarta-sans`; ikon `lucide-react-native`. Pengganti foto memakai warna datar per cabang olahraga (RN tidak punya gradasi bawaan).
 
-```js
-theme: {
-  extend: {
-    colors: {
-      bg: '#FBFAF7', surface: '#F3F1EC', raised: '#FFFFFF', line: '#E7E3DA',
-      fg: '#1D1B17', muted: '#6C665C',
-      accent: { DEFAULT: '#1F6B45', soft: '#E6F0EA' },
-      warning: { DEFAULT: '#8A5A0B', soft: '#FBF1DD' },
-      danger: { DEFAULT: '#B42318', soft: '#FDECEA' },
-    },
-    fontFamily: { sans: ['PlusJakartaSans_500Medium'], bold: ['PlusJakartaSans_700Bold'] },
-  },
-},
-```
+> Keputusan CP11: NativeWind tidak dipakai. Versi stabilnya (4.x) dibuat untuk Tailwind 3 dan versi 5 masih RC, sementara mobile memakai Expo SDK 58 / React Native 0.88; StyleSheet bertoken memberi hasil visual yang sama dan pasti berjalan di Expo Go.
 
 **Aturan konsistensi:** jika sebuah token diubah, ubah di **kedua** tempat dan di dokumen ini.
 
@@ -176,4 +163,4 @@ Diperiksa lewat screenshot desktop 1280px (terang & gelap) dan mobile 390px, 202
 - [x] Satu aksi utama per layar; aksi destruktif tidak menonjol
 - [x] Semua teks *sentence case*, sapaan konsisten ("kamu")
 - [x] Mode terang dan gelap sama-sama terbaca (kontras AA)
-- [ ] Tampilan web dan mobile terasa satu keluarga (menunggu CP11)
+- [x] Tampilan web dan mobile terasa satu keluarga (CP11, diperiksa lewat pratinjau 390px terang & gelap, 2026-10-28)
