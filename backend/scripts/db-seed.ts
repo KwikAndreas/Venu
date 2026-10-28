@@ -1,7 +1,11 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { copyFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { env, isBeforeMode } from '../src/config/env.ts';
 import { pool } from '../src/db/pool.ts';
 import { hashPassword } from '../src/lib/password.ts';
+import { UPLOAD_ROOT } from '../src/lib/storage.ts';
 import type { NewVenue } from '../src/modules/venues/venue.input.ts';
 import type { Role } from '../src/types/role.ts';
 
@@ -126,6 +130,10 @@ const SEED_VENUES: NewVenue[] = [
   },
 ];
 
+/** Foto contoh per olahraga (`seed-assets/venues/<olahraga>-<n>.jpg`), dipakai bergiliran. */
+const PHOTO_ASSETS = fileURLToPath(new URL('../seed-assets/venues/', import.meta.url));
+const PHOTOS_PER_SPORT = 3;
+
 function seedPasswordFor(user: SeedUser): string {
   if (isBeforeMode) return user.password;
   // [FIXED-A02] Tidak ada password bawaan yang bisa ditebak: pakai SEED_PASSWORD dari .env,
@@ -186,6 +194,36 @@ async function seedVenues(): Promise<number> {
   return SEED_VENUES.length;
 }
 
+/** Memberi foto pada lapangan seed yang belum punya foto (aman dijalankan ulang). */
+async function seedVenuePhotos(): Promise<number> {
+  const { rows } = await pool.query<{ id: number; nama: string }>(
+    `SELECT v.id, v.nama FROM venues v JOIN users u ON u.id = v.owner_id
+     WHERE u.email = $1 AND v.foto_url IS NULL`,
+    [VENUE_OWNER_EMAIL],
+  );
+  await mkdir(join(UPLOAD_ROOT, 'venues'), { recursive: true });
+
+  let filled = 0;
+  for (const venue of rows) {
+    const seed = SEED_VENUES.find((item) => item.nama === venue.nama);
+    if (!seed) continue;
+    const sameSport = SEED_VENUES.filter((item) => item.jenis_olahraga === seed.jenis_olahraga);
+    const photoNumber = (sameSport.indexOf(seed) % PHOTOS_PER_SPORT) + 1;
+
+    const key = `venues/${randomUUID()}.jpg`;
+    await copyFile(
+      join(PHOTO_ASSETS, `${seed.jenis_olahraga}-${photoNumber}.jpg`),
+      join(UPLOAD_ROOT, key),
+    );
+    await pool.query('UPDATE venues SET foto_url = $1 WHERE id = $2', [
+      `/uploads/${key}`,
+      venue.id,
+    ]);
+    filled += 1;
+  }
+  return filled;
+}
+
 try {
   const users = await seedUsers();
   console.log(`Seed users selesai: ${users} baru, ${SEED_USERS.length - users} sudah ada.`);
@@ -195,6 +233,8 @@ try {
       ? `Seed venues selesai: ${venues} lapangan baru.`
       : 'Seed venues dilewati: sudah ada.',
   );
+  const photos = await seedVenuePhotos();
+  console.log(`Seed foto lapangan selesai: ${photos} foto baru.`);
 } catch (error) {
   console.error('Gagal menjalankan seed:', error);
   process.exitCode = 1;
