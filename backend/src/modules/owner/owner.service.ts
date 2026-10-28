@@ -1,3 +1,5 @@
+import { isBeforeMode } from '../../config/env.ts';
+import { pool } from '../../db/pool.ts';
 import { withTransaction } from '../../db/transaction.ts';
 import { HttpError } from '../../lib/http-error.ts';
 import { daysBetweenInclusive } from '../../lib/time.ts';
@@ -76,25 +78,47 @@ export function listIncomingBookings(
  * Pemilik memverifikasi bukti bayar lalu mengonfirmasi booking. Pembayaran baru menjadi "lunas"
  * di sini, dalam transaksi yang sama dengan perubahan status booking.
  */
+/**
+ * [VULN-A10] Mode before: konfirmasi dijalankan TANPA transaksi dan "fail open" — booking tetap
+ * ditandai dikonfirmasi walau penyewa belum mengirim bukti bayar, dan bila salah satu update
+ * gagal di tengah jalan tidak ada rollback, sehingga status bisa tidak konsisten
+ * (mis. booking "dikonfirmasi" padahal pembayaran tidak pernah lunas).
+ */
+async function confirmBookingBefore(ownerId: number, bookingId: number): Promise<Booking> {
+  const current = await lockOwnerBooking(pool, bookingId, ownerId);
+  if (!current) throw new HttpError(404, 'Booking tidak ditemukan');
+
+  const payment = await lockPendingPayment(pool, bookingId);
+  if (payment) await setPaymentStatus(pool, payment.id, 'lunas');
+  // Tanpa bukti bayar pun booking tetap dikonfirmasi (fail open).
+  const updated = await setBookingStatus(pool, bookingId, 'dikonfirmasi');
+  if (!updated) throw new Error(`Booking ${bookingId} hilang saat dikonfirmasi`);
+  return updated;
+}
+
 export async function confirmBooking(
   ownerId: number,
   bookingId: number,
   ip: string | null,
 ): Promise<Booking> {
-  const booking = await withTransaction(async (client) => {
-    const current = await lockOwnerBooking(client, bookingId, ownerId);
-    if (!current) throw new HttpError(404, 'Booking tidak ditemukan');
-    if (current.status !== 'menunggu') {
-      throw new HttpError(409, `Booking berstatus "${current.status}" tidak bisa dikonfirmasi`);
-    }
-    const payment = await lockPendingPayment(client, bookingId);
-    if (!payment) throw new HttpError(409, 'Penyewa belum mengirim bukti bayar');
+  // [FIXED-A10] Mode after: seluruh langkah dalam satu transaksi (rollback bila ada yang gagal),
+  // dan "fail secure" — tolak bila booking tidak menunggu atau bukti bayar belum ada.
+  const booking = isBeforeMode
+    ? await confirmBookingBefore(ownerId, bookingId)
+    : await withTransaction(async (client) => {
+        const current = await lockOwnerBooking(client, bookingId, ownerId);
+        if (!current) throw new HttpError(404, 'Booking tidak ditemukan');
+        if (current.status !== 'menunggu') {
+          throw new HttpError(409, `Booking berstatus "${current.status}" tidak bisa dikonfirmasi`);
+        }
+        const payment = await lockPendingPayment(client, bookingId);
+        if (!payment) throw new HttpError(409, 'Penyewa belum mengirim bukti bayar');
 
-    await setPaymentStatus(client, payment.id, 'lunas');
-    const updated = await setBookingStatus(client, bookingId, 'dikonfirmasi');
-    if (!updated) throw new Error(`Booking ${bookingId} hilang saat dikonfirmasi`);
-    return updated;
-  });
+        await setPaymentStatus(client, payment.id, 'lunas');
+        const updated = await setBookingStatus(client, bookingId, 'dikonfirmasi');
+        if (!updated) throw new Error(`Booking ${bookingId} hilang saat dikonfirmasi`);
+        return updated;
+      });
 
   await recordAudit({
     userId: ownerId,

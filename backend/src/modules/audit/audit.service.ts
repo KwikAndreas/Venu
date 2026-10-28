@@ -1,13 +1,17 @@
+import { isBeforeMode } from '../../config/env.ts';
 import { countRecentByIp, insertAuditLog, type AuditEntry } from './audit.repository.ts';
 
 const FAILED_LOGIN_THRESHOLD = 5;
 const FAILED_LOGIN_WINDOW_MINUTES = 15;
 
 /**
- * Mencatat event penting. Kegagalan menulis log dicetak ke console tetapi tidak
- * menggagalkan request pengguna.
+ * Mencatat event penting (register, login berhasil/gagal, aksi admin, dll).
+ * [VULN-A09] Mode before: tidak ada pencatatan sama sekali — fungsi ini no-op, sehingga login
+ * gagal beruntun dan aksi admin (hapus user, ubah peran) tidak meninggalkan jejak untuk dilacak.
+ * [FIXED-A09] Mode after: setiap event dicatat ke tabel audit_logs.
  */
 export async function recordAudit(entry: AuditEntry): Promise<void> {
+  if (isBeforeMode) return;
   try {
     await insertAuditLog(entry);
   } catch (error) {
@@ -16,14 +20,16 @@ export async function recordAudit(entry: AuditEntry): Promise<void> {
 }
 
 /**
- * Mencatat login gagal. Setiap kali satu IP mencapai kelipatan ambang batas dalam jendela
- * waktu tertentu, dibuat event alert dan peringatan di console server.
+ * Mencatat login gagal. [FIXED-A09] Mode after: setiap kali satu IP mencapai kelipatan ambang
+ * batas dalam jendela waktu tertentu, dibuat event alert dan peringatan di console server.
+ * [VULN-A09] Mode before: tidak dicatat dan tidak ada alert (brute force tidak terdeteksi).
  */
 export async function recordFailedLogin(params: {
   email: string;
   userId: number | null;
   ip: string | null;
 }): Promise<void> {
+  if (isBeforeMode) return;
   await recordAudit({
     userId: params.userId,
     aksi: 'auth.login_gagal',
