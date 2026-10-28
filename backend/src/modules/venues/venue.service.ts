@@ -1,6 +1,7 @@
 import { IMAGE_TYPES } from '../../lib/file-type.ts';
 import { HttpError } from '../../lib/http-error.ts';
 import { removeUpload, removeUploadsQuietly, saveUpload } from '../../lib/storage.ts';
+import { fetchImageFromUrl } from '../../lib/url-image.ts';
 import { summarizeAvailability } from '../bookings/booking.service.ts';
 import type { NewVenue, VenueChanges } from './venue.input.ts';
 import {
@@ -63,12 +64,8 @@ export async function updateOwnVenue(
   return venue;
 }
 
-/** Mengganti foto lapangan dengan file gambar yang diunggah; foto lokal lama dihapus. */
-export async function replaceVenuePhoto(
-  id: number,
-  ownerId: number,
-  photo: Buffer,
-): Promise<Venue> {
+/** Menyimpan `photo` sebagai foto lapangan milik `ownerId`, lalu menghapus foto lokal lama. */
+async function saveVenuePhoto(id: number, ownerId: number, photo: Buffer): Promise<Venue> {
   const current = await findVenueById(id);
   if (!current || current.owner_id !== ownerId) throw new HttpError(404, NOT_FOUND_MESSAGE);
 
@@ -85,6 +82,17 @@ export async function replaceVenuePhoto(
     await removeUpload(current.foto_url.slice(LOCAL_PHOTO_PREFIX.length)).catch(() => undefined);
   }
   return updated;
+}
+
+/** Mengganti foto lapangan dengan file gambar yang diunggah. */
+export function replaceVenuePhoto(id: number, ownerId: number, photo: Buffer): Promise<Venue> {
+  return saveVenuePhoto(id, ownerId, photo);
+}
+
+/** Mengimpor foto lapangan dari URL (fitur "ambil dari internet"); lihat A01/SSRF di url-image.ts. */
+export async function importVenuePhoto(id: number, ownerId: number, url: string): Promise<Venue> {
+  const photo = await fetchImageFromUrl(url);
+  return saveVenuePhoto(id, ownerId, photo);
 }
 
 export async function deleteOwnVenue(id: number, ownerId: number): Promise<void> {

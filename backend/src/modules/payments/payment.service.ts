@@ -1,3 +1,4 @@
+import { isBeforeMode } from '../../config/env.ts';
 import { withTransaction } from '../../db/transaction.ts';
 import { CONTENT_TYPES, PROOF_TYPES, type FileExtension } from '../../lib/file-type.ts';
 import { HttpError } from '../../lib/http-error.ts';
@@ -60,10 +61,17 @@ export async function submitPayment(
 /** Bukti bayar hanya boleh dilihat oleh penyewa yang membayar, pemilik lapangan, dan admin. */
 export async function getPaymentProof(user: AuthUser, paymentId: number): Promise<ProofFile> {
   const access = await findPaymentProofAccess(paymentId);
-  const allowed =
-    access !== undefined &&
-    (user.role === 'admin' || user.id === access.payer_id || user.id === access.owner_id);
-  if (!access?.bukti_url || !allowed) throw new HttpError(404, 'Bukti bayar tidak ditemukan');
+  if (!access?.bukti_url) throw new HttpError(404, 'Bukti bayar tidak ditemukan');
+
+  if (isBeforeMode) {
+    // [VULN-A01] IDOR: siapa pun yang login bisa mengunduh bukti bayar milik orang lain
+    // (berisi data pembayaran pribadi) hanya dengan menebak ID (GET /payments/123/proof).
+  } else {
+    // [FIXED-A01] Hanya penyewa yang membayar, pemilik lapangan, dan admin yang boleh melihat.
+    const allowed =
+      user.role === 'admin' || user.id === access.payer_id || user.id === access.owner_id;
+    if (!allowed) throw new HttpError(404, 'Bukti bayar tidak ditemukan');
+  }
 
   const extension = access.bukti_url.split('.').pop() as FileExtension;
   return { path: resolveUpload(access.bukti_url), contentType: CONTENT_TYPES[extension] };

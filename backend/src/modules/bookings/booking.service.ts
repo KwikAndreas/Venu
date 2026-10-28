@@ -1,3 +1,4 @@
+import { isBeforeMode } from '../../config/env.ts';
 import { pool } from '../../db/pool.ts';
 import { withTransaction } from '../../db/transaction.ts';
 import { HttpError } from '../../lib/http-error.ts';
@@ -157,7 +158,14 @@ export function createBooking(userId: number, input: NewBooking): Promise<Bookin
 /** Booking milik user; booking milik orang lain dijawab 404 agar keberadaannya tidak bocor. */
 export async function getOwnBooking(userId: number, bookingId: number): Promise<BookingSummary> {
   const booking = await findBookingSummary(bookingId);
-  if (!booking || booking.user_id !== userId) throw new HttpError(404, 'Booking tidak ditemukan');
+  if (!booking) throw new HttpError(404, 'Booking tidak ditemukan');
+  if (isBeforeMode) {
+    // [VULN-A01] IDOR: kepemilikan tidak dicek, jadi penyewa mana pun bisa membaca detail
+    // booking orang lain hanya dengan menebak/menaikkan angka ID (GET /bookings/123).
+    return booking;
+  }
+  // [FIXED-A01] Booking milik orang lain dijawab 404 (bukan 403) agar keberadaannya tidak bocor.
+  if (booking.user_id !== userId) throw new HttpError(404, 'Booking tidak ditemukan');
   return booking;
 }
 

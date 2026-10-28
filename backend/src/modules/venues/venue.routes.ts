@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { HttpError } from '../../lib/http-error.ts';
-import { optionalPositiveInt, parseIdParam, queryValue } from '../../lib/request.ts';
+import { optionalPositiveInt, parseIdParam, queryValue, requireString } from '../../lib/request.ts';
 import { getAuthUser, requireAuth, requireRole } from '../../middleware/auth.ts';
 import { requireUploadedFile, uploadSingleFile } from '../../middleware/upload.ts';
 import { isValidTime } from '../../lib/time.ts';
@@ -13,6 +13,7 @@ import {
   deleteOwnVenue,
   getOwnerVenues,
   getVenue,
+  importVenuePhoto,
   replaceVenuePhoto,
   searchVenues,
   updateOwnVenue,
@@ -93,6 +94,16 @@ venueRouter.post('/:id/photo', ...onlyOwner, uploadSingleFile('foto'), async (re
     parseIdParam(req.params.id),
     getAuthUser(req).id,
     requireUploadedFile(req.file, 'foto'),
+  );
+  res.json({ venue });
+});
+
+// JSON: { url } — impor foto lapangan dari URL (lihat A01/SSRF)
+venueRouter.post('/:id/photo-url', ...onlyOwner, async (req, res) => {
+  const venue = await importVenuePhoto(
+    parseIdParam(req.params.id),
+    getAuthUser(req).id,
+    requireString(req.body, 'url'),
   );
   res.json({ venue });
 });
