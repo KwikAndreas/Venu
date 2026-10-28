@@ -113,12 +113,36 @@ export async function summarizeAvailability(
   );
 }
 
+/**
+ * [VULN-A06] Mode before: tiga kelemahan desain sekaligus — (1) total harga diambil dari klien
+ * dan dipercaya, jadi penyewa bisa membayar Rp1; (2) tanpa lock baris & tanpa cek bentrok, jadi
+ * slot yang sama bisa dibooking dobel (race condition saat request bersamaan); (3) tanpa batas
+ * booking belum dibayar, jadi bisa "borong" slot tanpa membayar.
+ */
+async function createBookingBefore(userId: number, input: NewBooking): Promise<Booking> {
+  const venue = await findBookableVenue(pool, input.venue_id);
+  if (!venue) throw new HttpError(404, 'Lapangan tidak ditemukan');
+  const range = toRange(input.jam_mulai, input.jam_selesai);
+  const hours = (range.end - range.start) / SLOT_MINUTES;
+  return insertBooking(pool, {
+    userId,
+    venueId: venue.id,
+    tanggal: input.tanggal,
+    jamMulai: input.jam_mulai,
+    jamSelesai: input.jam_selesai,
+    totalHarga: input.total_harga ?? venue.harga_per_jam * hours,
+  });
+}
+
 export function createBooking(userId: number, input: NewBooking): Promise<Booking> {
   assertBookableDate(input.tanggal, nowInJakarta().date);
+  if (isBeforeMode) return createBookingBefore(userId, input);
+
   const range: TimeRange = toRange(input.jam_mulai, input.jam_selesai);
 
-  // Cek bentrok dan insert dalam satu transaksi dengan baris lapangan terkunci, sehingga
-  // dua permintaan bersamaan untuk slot yang sama tidak bisa sama-sama lolos.
+  // [FIXED-A06] Cek bentrok dan insert dalam satu transaksi dengan baris lapangan terkunci,
+  // sehingga dua permintaan bersamaan untuk slot yang sama tidak bisa sama-sama lolos.
+  // Total harga selalu dihitung server (harga_per_jam × jam), input klien diabaikan.
   return withTransaction(async (client) => {
     const venue = await findBookableVenue(client, input.venue_id, { lock: true });
     if (!venue) throw new HttpError(404, 'Lapangan tidak ditemukan');
