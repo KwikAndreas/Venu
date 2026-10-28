@@ -29,11 +29,12 @@ Dokumen acuan:
 5. [Prasyarat](#prasyarat)
 6. [Menjalankan Backend](#menjalankan-backend)
 7. [Menjalankan Web](#menjalankan-web)
-8. [Mode keamanan Before/After](#mode-keamanan-beforeafter)
-9. [Ringkasan API](#ringkasan-api)
-10. [Pengujian](#pengujian)
-11. [Konvensi Pengembangan](#konvensi-pengembangan)
-12. [Troubleshooting](#troubleshooting)
+8. [Menjalankan Mobile](#menjalankan-mobile)
+9. [Mode keamanan Before/After](#mode-keamanan-beforeafter)
+10. [Ringkasan API](#ringkasan-api)
+11. [Pengujian](#pengujian)
+12. [Konvensi Pengembangan](#konvensi-pengembangan)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -60,7 +61,7 @@ Dokumen acuan:
 | CP8 | Pengujian Before | ⏳ Belum |
 | CP9 | Perbaikan (Secure SDLC) | ⏳ Belum |
 | CP10 | Pengujian After + laporan | ⏳ Belum |
-| CP11 | Mobile (opsional) | ⏳ Belum |
+| CP11 | Mobile (opsional) | ✅ Selesai |
 
 Detail tiap checkpoint ada di bagian **Progress Log** pada [TASK.md](TASK.md).
 
@@ -74,7 +75,7 @@ Detail tiap checkpoint ada di bagian **Progress Log** pada [TASK.md](TASK.md).
 | Auth | JWT (`jsonwebtoken`) |
 | Upload | `multer` (disimpan lokal di `backend/uploads/`) |
 | Web | React + Vite + Tailwind CSS v4 |
-| Mobile (opsional) | Expo (React Native) + NativeWind |
+| Mobile | Expo SDK 58 (React Native) + Expo Router, StyleSheet dengan token `DESIGN.md` |
 | Kualitas kode | ESLint (typescript-eslint strict) + Prettier |
 | Uji keamanan | OWASP ZAP, Burp Suite Community, Semgrep, `npm audit` |
 
@@ -85,6 +86,7 @@ Venu/
 ├── backend/                 REST API (Express + Neon)
 │   ├── db/schema.sql        Skema database (6 tabel)
 │   ├── scripts/             db-migrate.ts, db-seed.ts
+│   ├── seed-assets/venues/  foto contoh lapangan (dipakai db:seed)
 │   ├── src/
 │   │   ├── config/          Membaca & memvalidasi .env
 │   │   ├── db/              Pool koneksi & helper transaksi
@@ -106,7 +108,13 @@ Venu/
 │       ├── pages/           Satu file/folder per halaman
 │       ├── index.css        Token desain (DESIGN.md §10)
 │       └── main.tsx         Daftar rute
-├── mobile/                  Aplikasi Expo (opsional, CP11)
+├── mobile/                  Aplikasi Expo untuk penyewa (CP11)
+│   └── src/
+│       ├── app/             Layar (Expo Router): (tabs)/Cari·Booking saya·Akun, venue/[id], booking/[id], login, register
+│       ├── auth/ bookings/  Sesi login dan booking aktif (sama seperti web)
+│       ├── components/      ui/ (Button, TextField, StatusBadge, …), venue/, booking/
+│       ├── constants/       theme.ts: token warna/tipe/jarak dari DESIGN.md
+│       └── lib/             Klien API, SecureStore, format & aturan (salinan dari web/src/lib)
 ├── docs/                    Laporan dan bukti pengujian
 ├── TASK.md
 ├── DESIGN.md
@@ -179,7 +187,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 
 ```bash
 npm run db:migrate   # membuat 6 tabel di Neon (aman dijalankan berulang)
-npm run db:seed      # membuat 4 akun dummy + 9 lapangan dummy (aman dijalankan berulang)
+npm run db:seed      # membuat 4 akun dummy + 9 lapangan dummy berfoto (aman dijalankan berulang)
 ```
 
 ### 4. Jalankan server
@@ -253,6 +261,51 @@ Tampilan mengikuti tema perangkat (terang/gelap) dan bisa diganti lewat tombol b
 | `npm run typecheck` | Cek tipe TypeScript |
 | `npm run lint` | ESLint (termasuk aturan React Hooks) |
 | `npm run format` | Prettier |
+
+---
+
+## Menjalankan Mobile
+
+Aplikasi mobile ditujukan untuk **penyewa**: masuk/daftar, cari lapangan, lihat detail dan pilih jam, pesan, kirim bukti bayar, dan pantau booking. Dashboard pemilik dan admin tetap di web. Dijalankan dengan **Expo Go** (unduh dari Play Store/App Store), tanpa Android Studio atau Xcode.
+
+### 1. Pasang dependensi
+
+```bash
+cd mobile
+npm install
+```
+
+### 2. Hubungkan HP ke backend
+
+HP tidak bisa membuka `127.0.0.1` milik laptop, jadi pilih salah satu cara:
+
+| Cara | Pengaturan backend | Pengaturan `mobile/.env` |
+|---|---|---|
+| **HP lewat Wi-Fi** (paling mudah, mode after) | `HOST=0.0.0.0` di `backend/.env`, lalu restart backend | kosongkan `EXPO_PUBLIC_API_URL` (alamat laptop diambil otomatis dari Expo) |
+| **HP Android lewat kabel USB** (bisa mode before maupun after) | tidak perlu diubah | `EXPO_PUBLIC_API_URL=http://localhost:4000`, lalu jalankan `adb reverse tcp:4000 tcp:4000` |
+| **Emulator Android** | `HOST=0.0.0.0` | `EXPO_PUBLIC_API_URL=http://10.0.2.2:4000` |
+
+Salin `mobile/.env.example` menjadi `mobile/.env` bila perlu mengisi nilai di atas. HP dan laptop harus berada di **Wi-Fi yang sama**. Bila Windows bertanya soal firewall untuk Node.js, pilih **Allow**. Alamat server yang sedang dipakai tampil di tab **Akun**.
+
+> Mode **before** sengaja memaksa backend hanya mendengar di `127.0.0.1` (lihat [Mode keamanan](#mode-keamanan-beforeafter)), jadi untuk menguji mode before dari HP, pakai cara **kabel USB + `adb reverse`**.
+
+### 3. Jalankan
+
+```bash
+npx expo start          # pindai QR code dengan Expo Go (Android) atau aplikasi Kamera (iPhone)
+npx expo start --clear  # bila tampilan tidak ikut berubah setelah kode diedit
+```
+
+Isi `EXPO_PUBLIC_SECURITY_MODE` di `mobile/.env` sama dengan `SECURITY_MODE` backend. Mode before menampilkan pita peringatan dan meneruskan pesan error login asli dari API (celah A07, sama seperti web). Token login disimpan di **SecureStore** (Keystore/Keychain), bukan teks biasa.
+
+### Skrip npm (folder `mobile`)
+
+| Perintah | Fungsi |
+|---|---|
+| `npx expo start` | Server development (Expo Go) |
+| `npm run typecheck` | Cek tipe TypeScript |
+| `npm run lint` | ESLint (`eslint-config-expo`) |
+| `npx prettier --write src` | Format kode |
 
 ---
 
