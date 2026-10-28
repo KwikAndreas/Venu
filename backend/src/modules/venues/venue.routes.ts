@@ -94,6 +94,7 @@ venueRouter.post('/:id/photo', ...onlyOwner, uploadSingleFile('foto'), async (re
     parseIdParam(req.params.id),
     getAuthUser(req).id,
     requireUploadedFile(req.file, 'foto'),
+    req.file?.originalname,
   );
   res.json({ venue });
 });

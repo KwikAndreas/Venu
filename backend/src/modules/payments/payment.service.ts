@@ -17,6 +17,7 @@ export type PaymentSubmission = {
   bookingId: number;
   metode: PaymentMethod;
   bukti: Buffer;
+  originalName?: string;
 };
 
 export type ProofFile = {
@@ -33,7 +34,12 @@ export async function submitPayment(
   submission: PaymentSubmission,
 ): Promise<Payment> {
   // File diverifikasi dan disimpan lebih dulu; bila langkah database gagal, file dihapus lagi.
-  const saved = await saveUpload('payments', submission.bukti, PROOF_TYPES);
+  const saved = await saveUpload(
+    'payments',
+    submission.bukti,
+    PROOF_TYPES,
+    submission.originalName,
+  );
   try {
     return await withTransaction(async (client) => {
       const booking = await lockOwnBooking(client, submission.bookingId, userId);

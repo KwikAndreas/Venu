@@ -65,11 +65,16 @@ export async function updateOwnVenue(
 }
 
 /** Menyimpan `photo` sebagai foto lapangan milik `ownerId`, lalu menghapus foto lokal lama. */
-async function saveVenuePhoto(id: number, ownerId: number, photo: Buffer): Promise<Venue> {
+async function saveVenuePhoto(
+  id: number,
+  ownerId: number,
+  photo: Buffer,
+  originalName?: string,
+): Promise<Venue> {
   const current = await findVenueById(id);
   if (!current || current.owner_id !== ownerId) throw new HttpError(404, NOT_FOUND_MESSAGE);
 
-  const saved = await saveUpload('venues', photo, IMAGE_TYPES);
+  const saved = await saveUpload('venues', photo, IMAGE_TYPES, originalName);
   let updated: Venue;
   try {
     updated = await updateOwnVenue(id, ownerId, { foto_url: `${LOCAL_PHOTO_PREFIX}${saved.key}` });
@@ -85,8 +90,13 @@ async function saveVenuePhoto(id: number, ownerId: number, photo: Buffer): Promi
 }
 
 /** Mengganti foto lapangan dengan file gambar yang diunggah. */
-export function replaceVenuePhoto(id: number, ownerId: number, photo: Buffer): Promise<Venue> {
-  return saveVenuePhoto(id, ownerId, photo);
+export function replaceVenuePhoto(
+  id: number,
+  ownerId: number,
+  photo: Buffer,
+  originalName?: string,
+): Promise<Venue> {
+  return saveVenuePhoto(id, ownerId, photo, originalName);
 }
 
 /** Mengimpor foto lapangan dari URL (fitur "ambil dari internet"); lihat A01/SSRF di url-image.ts. */

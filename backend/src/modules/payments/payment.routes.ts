@@ -24,6 +24,7 @@ paymentRouter.post(
       bookingId: parseIdParam(req.params.id),
       metode,
       bukti: requireUploadedFile(req.file, 'bukti'),
+      originalName: req.file?.originalname,
     });
     res.status(201).json({ payment });
   },
