@@ -9,10 +9,12 @@ import {
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider as NavigationTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { useAuth } from '@/auth/auth-context';
 import { ActiveBookingsProvider } from '@/bookings/ActiveBookingsProvider';
+import { MatrixSplash } from '@/components/MatrixSplash';
 import { Fonts } from '@/constants/theme';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { useTheme } from '@/theme/theme-context';
@@ -23,10 +25,13 @@ SplashScreen.preventAutoHideAsync().catch(() => undefined);
 function AppNavigator() {
   const { scheme, colors } = useTheme();
   const { ready } = useAuth();
+  const [splashDone, setSplashDone] = useState(false);
+  const finishSplash = useCallback(() => setSplashDone(true), []);
 
+  // Splash bawaan (warna latar polos) langsung diganti animasi "venu." begitu font siap.
   useEffect(() => {
-    if (ready) SplashScreen.hideAsync().catch(() => undefined);
-  }, [ready]);
+    SplashScreen.hideAsync().catch(() => undefined);
+  }, []);
 
   const navigationTheme = useMemo(() => {
     const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -43,26 +48,30 @@ function AppNavigator() {
     };
   }, [scheme, colors]);
 
-  if (!ready) return null;
-
   return (
-    <NavigationTheme value={navigationTheme}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShadowVisible: false,
-          headerTitleStyle: { fontFamily: Fonts.bold, fontSize: 17 },
-          headerBackButtonDisplayMode: 'minimal',
-          contentStyle: { backgroundColor: colors.bg },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="venue/[id]" options={{ title: '' }} />
-        <Stack.Screen name="booking/[id]" options={{ title: 'Selesaikan pemesanan' }} />
-        <Stack.Screen name="login" options={{ title: 'Masuk', presentation: 'modal' }} />
-        <Stack.Screen name="register" options={{ title: 'Daftar', presentation: 'modal' }} />
-      </Stack>
-    </NavigationTheme>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {ready && (
+        <NavigationTheme value={navigationTheme}>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <Stack
+            screenOptions={{
+              headerShadowVisible: false,
+              headerTitleStyle: { fontFamily: Fonts.bold, fontSize: 17 },
+              headerBackButtonDisplayMode: 'minimal',
+              contentStyle: { backgroundColor: colors.bg },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="venue/[id]" options={{ title: '' }} />
+            <Stack.Screen name="booking/[id]" options={{ title: 'Selesaikan pemesanan' }} />
+            <Stack.Screen name="login" options={{ title: 'Masuk', presentation: 'modal' }} />
+            <Stack.Screen name="register" options={{ title: 'Daftar', presentation: 'modal' }} />
+          </Stack>
+        </NavigationTheme>
+      )}
+      {/* Splash dilepas setelah animasi selesai DAN sesi login selesai diperiksa. */}
+      {(!splashDone || !ready) && <MatrixSplash onFinished={finishSplash} />}
+    </View>
   );
 }
 
