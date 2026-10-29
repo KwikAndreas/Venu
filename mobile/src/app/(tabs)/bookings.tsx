@@ -1,13 +1,15 @@
 import { router, useFocusEffect } from 'expo-router';
-import { CalendarX2 } from 'lucide-react-native';
-import { useCallback } from 'react';
+import { CalendarX2, Inbox } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/auth-context';
 import { useActiveBookings } from '@/bookings/active-bookings-context';
 import { BookingRow } from '@/components/booking/BookingRow';
+import { OwnerBookingRow } from '@/components/booking/OwnerBookingRow';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { Segment } from '@/components/ui/Choice';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/Feedback';
 import { SecurityModeBanner } from '@/components/ui/Layout';
 import { SignInPrompt } from '@/components/ui/SignInPrompt';
@@ -16,8 +18,8 @@ import { useApi } from '@/hooks/use-api';
 import { api, toApiError } from '@/lib/api';
 import { isActiveBooking } from '@/lib/booking-stage';
 import { confirmAction, notify } from '@/lib/dialog';
-import { formatDate } from '@/lib/format';
-import type { BookingSummary } from '@/lib/types';
+import { bookingsTabTitle, formatDate, formatRupiah } from '@/lib/format';
+import type { BookingStatus, BookingSummary, OwnerBooking } from '@/lib/types';
 
 function byStartTime(a: BookingSummary, b: BookingSummary): number {
   return `${a.tanggal}${a.jam_mulai}`.localeCompare(`${b.tanggal}${b.jam_mulai}`);
@@ -106,6 +108,97 @@ function RenterBookings({ userId }: { userId: number }) {
   );
 }
 
+type OwnerFilter = Extract<BookingStatus, 'menunggu' | 'dikonfirmasi'> | 'semua';
+
+const OWNER_FILTERS: { value: OwnerFilter; label: string }[] = [
+  { value: 'menunggu', label: 'Perlu diproses' },
+  { value: 'dikonfirmasi', label: 'Terkonfirmasi' },
+  { value: 'semua', label: 'Semua' },
+];
+
+const OWNER_EMPTY: Record<OwnerFilter, string> = {
+  menunggu: 'Booking yang menunggu pembayaran atau konfirmasimu akan muncul di sini.',
+  dikonfirmasi: 'Booking yang sudah kamu konfirmasi akan muncul di sini.',
+  semua: 'Booking dari penyewa akan muncul di sini.',
+};
+
+/** Booking masuk untuk pemilik (versi ringkas tab "Booking masuk" di dashboard web). */
+function OwnerBookings({ userId }: { userId: number }) {
+  const { reload: reloadBadge } = useActiveBookings();
+  const [filter, setFilter] = useState<OwnerFilter>('menunggu');
+  const [processingId, setProcessingId] = useState<number>();
+  const query = filter === 'semua' ? '' : `?status=${filter}`;
+  const { data, error, reload } = useApi<{ bookings: OwnerBooking[] }>(
+    `/owner/bookings${query}`,
+    `user:${userId}`,
+  );
+
+  // Penyewa bisa mengirim bukti atau membatalkan kapan saja, jadi muat ulang saat dibuka.
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+      reloadBadge();
+    }, [reload, reloadBadge]),
+  );
+
+  const run = async (booking: OwnerBooking, kind: 'confirm' | 'reject') => {
+    const confirmed = await confirmAction(
+      kind === 'confirm'
+        ? {
+            title: 'Konfirmasi booking?',
+            message: `Pastikan bukti bayar ${booking.penyewa_nama} sudah sesuai. Pembayaran sebesar ${formatRupiah(booking.total_harga)} akan ditandai lunas.`,
+            confirmLabel: 'Konfirmasi',
+            destructive: false,
+          }
+        : {
+            title: 'Tolak booking?',
+            message: `Booking ${booking.penyewa_nama} pada ${formatDate(booking.tanggal)} pukul ${booking.jam_mulai} akan ditolak.`,
+            confirmLabel: 'Tolak booking',
+          },
+    );
+    if (!confirmed) return;
+    setProcessingId(booking.id);
+    try {
+      await api.post(`/owner/bookings/${booking.id}/${kind}`);
+      reload();
+      reloadBadge();
+    } catch (caught) {
+      notify(
+        kind === 'confirm' ? 'Gagal mengonfirmasi' : 'Gagal menolak',
+        toApiError(caught).message,
+      );
+    } finally {
+      setProcessingId(undefined);
+    }
+  };
+
+  let list;
+  if (error) {
+    list = <ErrorState message={error.message} onRetry={reload} />;
+  } else if (!data) {
+    list = Array.from({ length: 3 }, (_, index) => <Skeleton key={index} height={140} />);
+  } else if (data.bookings.length === 0) {
+    list = <EmptyState icon={Inbox} title="Tidak ada booking" description={OWNER_EMPTY[filter]} />;
+  } else {
+    list = data.bookings.map((booking) => (
+      <OwnerBookingRow
+        key={booking.id}
+        booking={booking}
+        processing={processingId === booking.id}
+        onConfirm={() => void run(booking, 'confirm')}
+        onReject={() => void run(booking, 'reject')}
+      />
+    ));
+  }
+
+  return (
+    <View style={styles.section}>
+      <Segment options={OWNER_FILTERS} value={filter} onChange={setFilter} />
+      {list}
+    </View>
+  );
+}
+
 export default function BookingsScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -113,12 +206,14 @@ export default function BookingsScreen() {
   let content;
   if (!user) {
     content = <SignInPrompt description="Booking yang kamu pesan akan muncul di sini." />;
-  } else if (user.role !== 'penyewa') {
+  } else if (user.role === 'pemilik') {
+    content = <OwnerBookings userId={user.id} />;
+  } else if (user.role === 'admin') {
     content = (
       <EmptyState
         icon={CalendarX2}
-        title="Khusus akun penyewa"
-        description="Kelola booking masuk lewat dashboard pemilik di versi web."
+        title="Khusus penyewa dan pemilik"
+        description="Kelola pengguna dan lapangan lewat panel admin di versi web."
       />
     );
   } else {
@@ -130,7 +225,7 @@ export default function BookingsScreen() {
       <SecurityModeBanner />
       <ScrollView contentContainerStyle={styles.content}>
         <AppText variant="h1" accessibilityRole="header">
-          Booking saya
+          {bookingsTabTitle(user?.role)}
         </AppText>
         {content}
       </ScrollView>

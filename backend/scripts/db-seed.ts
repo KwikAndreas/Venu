@@ -37,8 +37,15 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 150000,
     jam_buka: '08:00',
     jam_tutup: '23:00',
-    fasilitas: ['Rumput sintetis', 'Ruang ganti', 'Parkir luas', 'Kantin'],
-    deskripsi: 'Lapangan futsal indoor berstandar turnamen dengan pencahayaan LED.',
+    fasilitas: [
+      'Rumput sintetis',
+      'Pagar jaring',
+      'Balkon penonton',
+      'Pencahayaan alami',
+      'Lampu LED',
+    ],
+    deskripsi:
+      'Lapangan futsal indoor berumput sintetis yang dikelilingi pagar jaring. Ada balkon penonton di lantai dua, dan jendela besar di sepanjang dinding membuat lapangan terang alami pada siang hari.',
   },
   {
     nama: 'Bintang Timur Futsal',
@@ -48,8 +55,9 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 120000,
     jam_buka: '09:00',
     jam_tutup: '22:00',
-    fasilitas: ['Lantai vinyl', 'Ruang ganti', 'Musala'],
-    deskripsi: 'Dua lapangan futsal indoor yang nyaman untuk latihan rutin.',
+    fasilitas: ['Rumput sintetis', 'Pagar jaring', 'Bangku pemain', 'Taman', 'Lampu LED'],
+    deskripsi:
+      'Lapangan futsal indoor berumput sintetis dengan pagar jaring tinggi di sekelilingnya. Deretan bangku kayu dan taman kecil di sisi lapangan membuat suasana santai, cocok untuk main malam bersama teman.',
   },
   {
     nama: 'Samudra Futsal Center',
@@ -59,8 +67,9 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 175000,
     jam_buka: '07:00',
     jam_tutup: '23:00',
-    fasilitas: ['Rumput sintetis', 'Tribun penonton', 'Shower', 'Wi-Fi'],
-    deskripsi: 'Kompleks futsal dengan tribun penonton, cocok untuk turnamen komunitas.',
+    fasilitas: ['Rumput sintetis', 'Pagar jaring', 'Atap skylight', 'Lampu LED'],
+    deskripsi:
+      'Hall futsal indoor yang luas dengan rumput sintetis dan pagar jaring di sekeliling lapangan. Atap skylight dan lampu LED berderet menjaga pencahayaan tetap merata, cocok untuk latihan tim dan sparing.',
   },
   {
     nama: 'Rajawali Badminton Hall',
@@ -70,8 +79,9 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 60000,
     jam_buka: '06:00',
     jam_tutup: '22:00',
-    fasilitas: ['Karpet BWF', 'Ruang ganti', 'Sewa raket'],
-    deskripsi: 'Empat lapangan badminton dengan karpet standar BWF.',
+    fasilitas: ['Karpet sintetis', '3 lapangan', 'Bangku pemain', 'Lampu LED'],
+    deskripsi:
+      'Tiga lapangan badminton berkarpet sintetis hijau dalam satu hall. Setiap lapangan punya bangku kayu di sisinya, dan lampu LED tersebar merata di langit-langit.',
   },
   {
     nama: 'Kencana Shuttle Club',
@@ -81,8 +91,9 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 50000,
     jam_buka: '07:00',
     jam_tutup: '21:00',
-    fasilitas: ['Lantai kayu', 'Parkir', 'Kantin'],
-    deskripsi: 'GOR badminton berlantai kayu dengan suasana sejuk khas Bandung.',
+    fasilitas: ['Karpet sintetis', 'Plafon tinggi', 'Pencahayaan alami', 'Lampu LED'],
+    deskripsi:
+      'GOR badminton satu lapangan berkarpet sintetis biru dengan plafon tinggi. Jendela besar di dinding membuat ruangan terang alami pada siang hari, dengan suasana sejuk khas Bandung.',
   },
   {
     nama: 'Pelita Badminton Arena',
@@ -92,8 +103,9 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 55000,
     jam_buka: '06:00',
     jam_tutup: '22:00',
-    fasilitas: ['Karpet BWF', 'Shower', 'Sewa raket', 'Wi-Fi'],
-    deskripsi: 'Arena badminton modern dengan sirkulasi udara yang baik.',
+    fasilitas: ['Karpet sintetis', 'Plafon tinggi', 'Bangku pemain', 'Lampu LED'],
+    deskripsi:
+      'Hall badminton satu lapangan berkarpet sintetis biru dengan plafon tinggi. Dinding polos tanpa jendela menghindari silau, sehingga shuttlecock tetap mudah terlihat.',
   },
   {
     nama: 'Nusantara Basketball Court',
@@ -103,8 +115,15 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 250000,
     jam_buka: '08:00',
     jam_tutup: '22:00',
-    fasilitas: ['Lantai parket', 'Papan skor digital', 'Tribun', 'Ruang ganti'],
-    deskripsi: 'Lapangan basket indoor full court dengan lantai parket.',
+    fasilitas: [
+      'Lantai parket',
+      'Full court',
+      'Tribun penonton',
+      'Balkon penonton',
+      'Dinding pelindung',
+    ],
+    deskripsi:
+      'Lapangan basket indoor full court berlantai parket kayu. Tersedia tribun di sisi lapangan dan balkon penonton di lantai atas, serta dinding berpelindung busa di sekeliling lapangan.',
   },
   {
     nama: 'Merapi Hoops',
@@ -114,8 +133,15 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 200000,
     jam_buka: '09:00',
     jam_tutup: '21:00',
-    fasilitas: ['Lantai sintetis', 'Parkir', 'Shower'],
-    deskripsi: 'Lapangan basket semi-outdoor beratap, nyaman di segala cuaca.',
+    fasilitas: [
+      'Lantai parket',
+      'Full court',
+      'Tribun penonton',
+      'Atap skylight',
+      '4 ring portabel',
+    ],
+    deskripsi:
+      'Hall basket indoor berlantai parket dengan atap skylight yang terang alami. Empat ring portabel memungkinkan lapangan dibagi dua untuk latihan, dan tribun penonton tersedia di ujung lapangan.',
   },
   {
     nama: 'Mahakam Basket Arena',
@@ -125,8 +151,15 @@ const SEED_VENUES: NewVenue[] = [
     harga_per_jam: 225000,
     jam_buka: '08:00',
     jam_tutup: '23:00',
-    fasilitas: ['Lantai parket', 'Papan skor digital', 'Kantin', 'Wi-Fi'],
-    deskripsi: 'Arena basket dengan papan skor digital untuk latihan dan pertandingan.',
+    fasilitas: [
+      'Lantai parket',
+      'Half court',
+      'Papan pantul kaca',
+      'Dinding pelindung',
+      'Kursi tunggu',
+    ],
+    deskripsi:
+      'Lapangan basket half court indoor bergaya klub premium dengan lantai parket kayu dan ring dinding berpapan pantul kaca. Dinding di belakang ring berpelindung busa dan ada kursi tunggu di sisi lapangan. Pas untuk latihan shooting atau main 3x3.',
   },
 ];
 
@@ -194,6 +227,25 @@ async function seedVenues(): Promise<number> {
   return SEED_VENUES.length;
 }
 
+/**
+ * Menyamakan fasilitas & deskripsi lapangan seed yang sudah ada dengan SEED_VENUES, agar
+ * database lama ikut sesuai dengan foto contohnya (aman dijalankan ulang).
+ */
+async function syncSeedVenueDetails(): Promise<number> {
+  let updated = 0;
+  for (const venue of SEED_VENUES) {
+    const result = await pool.query(
+      `UPDATE venues v SET fasilitas = $1, deskripsi = $2
+       FROM users u
+       WHERE u.id = v.owner_id AND u.email = $3 AND v.nama = $4
+         AND (v.fasilitas IS DISTINCT FROM $1 OR v.deskripsi IS DISTINCT FROM $2)`,
+      [venue.fasilitas, venue.deskripsi, VENUE_OWNER_EMAIL, venue.nama],
+    );
+    updated += result.rowCount ?? 0;
+  }
+  return updated;
+}
+
 /** Memberi foto pada lapangan seed yang belum punya foto (aman dijalankan ulang). */
 async function seedVenuePhotos(): Promise<number> {
   const { rows } = await pool.query<{ id: number; nama: string }>(
@@ -233,6 +285,8 @@ try {
       ? `Seed venues selesai: ${venues} lapangan baru.`
       : 'Seed venues dilewati: sudah ada.',
   );
+  const synced = await syncSeedVenueDetails();
+  console.log(`Sinkron detail lapangan seed: ${synced} lapangan diperbarui.`);
   const photos = await seedVenuePhotos();
   console.log(`Seed foto lapangan selesai: ${photos} foto baru.`);
 } catch (error) {

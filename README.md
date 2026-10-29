@@ -108,9 +108,9 @@ Venu/
 │       ├── pages/           Satu file/folder per halaman
 │       ├── index.css        Token desain (DESIGN.md §10)
 │       └── main.tsx         Daftar rute
-├── mobile/                  Aplikasi Expo untuk penyewa (CP11)
+├── mobile/                  Aplikasi Expo untuk penyewa + booking masuk pemilik (CP11)
 │   └── src/
-│       ├── app/             Layar (Expo Router): (tabs)/Cari·Booking saya·Akun, venue/[id], booking/[id], login, register
+│       ├── app/             Layar (Expo Router): (tabs)/Cari·Booking saya|masuk·Akun, venue/[id], booking/[id], payment/[id], login, register
 │       ├── auth/ bookings/  Sesi login dan booking aktif (sama seperti web)
 │       ├── components/      ui/ (Button, TextField, StatusBadge, …), venue/, booking/
 │       ├── constants/       theme.ts: token warna/tipe/jarak dari DESIGN.md
@@ -267,7 +267,7 @@ Tampilan mengikuti tema perangkat (terang/gelap) dan bisa diganti lewat tombol b
 
 ## Menjalankan Mobile
 
-Aplikasi mobile ditujukan untuk **penyewa**: masuk/daftar, cari lapangan, lihat detail dan pilih jam, pesan, kirim bukti bayar, dan pantau booking. Dashboard pemilik dan admin tetap di web. Dijalankan dengan **Expo Go** (unduh dari Play Store/App Store), tanpa Android Studio atau Xcode.
+Aplikasi mobile ditujukan untuk **penyewa**: masuk/daftar, cari lapangan, lihat detail dan pilih jam, pesan, kirim bukti bayar, dan pantau booking. **Pemilik** yang masuk di mobile mendapat tab **Booking masuk**: lihat bukti bayar, lalu konfirmasi atau tolak booking. Statistik, kelola lapangan, dan panel admin tetap di web. Dijalankan dengan **Expo Go** (unduh dari Play Store/App Store), tanpa Android Studio atau Xcode.
 
 ### 1. Pasang dependensi
 

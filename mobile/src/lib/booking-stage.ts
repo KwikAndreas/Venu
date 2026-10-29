@@ -50,6 +50,17 @@ export function renterStage(booking: StageInput, now: Now = nowInJakarta()): Sta
   }
 }
 
+/** Sudut pandang pemilik: apa yang perlu saya lakukan dengan booking ini? */
+export function ownerStage(booking: StageInput, now: Now = nowInJakarta()): Stage {
+  if (booking.status === 'menunggu') {
+    return booking.payment_status === 'menunggu'
+      ? { label: 'Perlu dikonfirmasi', tone: 'warning' }
+      : { label: 'Belum dibayar', tone: 'neutral' };
+  }
+  if (booking.status === 'ditolak') return { label: 'Ditolak', tone: 'danger' };
+  return renterStage(booking, now);
+}
+
 /** Booking yang masih "berjalan" bagi penyewa: menunggu, atau terkonfirmasi dan belum selesai. */
 export function isActiveBooking(booking: StageInput, now: Now = nowInJakarta()): boolean {
   return (

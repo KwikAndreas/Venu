@@ -23,7 +23,7 @@ function canCancel(booking: BookingSummary): boolean {
 }
 
 /** Blok tanggal ala kalender: tanggal besar, bulan kecil. */
-function DateBlock({ date }: { date: string }) {
+export function DateBlock({ date }: { date: string }) {
   const { colors } = useTheme();
   const value = new Date(`${date}T00:00:00`);
   return (

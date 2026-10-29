@@ -80,6 +80,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     });
   } catch (error) {
     if (options.signal?.aborted) throw error;
+    // Penyebab asli (mis. body tidak didukung expo/fetch) hanya dicatat saat development.
+    if (__DEV__) console.warn(`Request ${path} gagal:`, error);
     throw new ApiError(0, `Tidak dapat terhubung ke server (${API_URL}).`);
   }
 
@@ -98,6 +100,17 @@ export const api = {
   post: <T>(path: string, json?: unknown) => request<T>(path, { method: 'POST', json }),
   upload: <T>(path: string, form: FormData) => request<T>(path, { method: 'POST', form }),
 };
+
+/**
+ * Sumber gambar yang butuh login (mis. bukti bayar): `expo-image` mengirim header token sendiri,
+ * jadi file tidak perlu dibuat publik.
+ */
+export function authorizedSource(path: string): { uri: string; headers: Record<string, string> } {
+  return {
+    uri: `${API_URL}${path}`,
+    headers: cachedToken ? { Authorization: `Bearer ${cachedToken}` } : {},
+  };
+}
 
 export function toApiError(error: unknown): ApiError {
   return error instanceof ApiError
