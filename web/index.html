@@ -15,9 +15,153 @@
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
       })();
     </script>
+    <style>
+      /* Splash pembuka: tampil hanya saat halaman pertama kali dimuat, lalu dihapus. */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: #fbfaf7;
+        transition: opacity 250ms ease-out;
+      }
+      [data-theme='dark'] #splash {
+        background: #151412;
+      }
+      #splash.is-done {
+        opacity: 0;
+      }
+      #splash canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" aria-hidden="true"><canvas></canvas><canvas></canvas></div>
     <div id="root"></div>
+    <script>
+      /**
+       * Splash "matrix" (~1,2 detik): hujan karakter berwarna aksen, lalu huruf di tengah
+       * teracak dan terkunci satu per satu membentuk "venu.". Splash baru hilang setelah
+       * animasi selesai DAN aplikasi React sudah tampil, sehingga tidak ada layar kosong.
+       * Hormati prefers-reduced-motion: langsung tampilkan kata tanpa animasi.
+       */
+      (function () {
+        var splash = document.getElementById('splash');
+        // Dua lapisan: hujan (berjejak) di bawah, kata di atas (dibersihkan tiap frame).
+        var canvases = splash.querySelectorAll('canvas');
+        var ctx = canvases[0].getContext('2d');
+        var wordCtx = canvases[1].getContext('2d');
+        var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var COLORS = dark
+          ? { bg: '21,20,18', fg: '#EEEAE3', accent: '#86C7A1' }
+          : { bg: '251,250,247', fg: '#1D1B17', accent: '#1F6B45' };
+        var GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#$%&*+=<>';
+        var WORD = 'venu.';
+        var DURATION = 950; // hujan + penguncian huruf
+        var LOCK_START = 300;
+        var LOCK_STEP = 120;
+        var CELL = 16;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        var dpr = window.devicePixelRatio || 1;
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        [ctx, wordCtx].forEach(function (context) {
+          context.canvas.width = width * dpr;
+          context.canvas.height = height * dpr;
+          context.scale(dpr, dpr);
+        });
+
+        var columns = Math.ceil(width / CELL);
+        var drops = [];
+        for (var i = 0; i < columns; i++) {
+          drops.push({ y: -Math.random() * height * 0.6, speed: 0.6 + Math.random() * 0.9 });
+        }
+        var randomGlyph = function () {
+          return GLYPHS.charAt(Math.floor(Math.random() * GLYPHS.length));
+        };
+        var wordSize = Math.min(96, Math.max(56, width * 0.14));
+
+        function drawWord(elapsed) {
+          var ctx = wordCtx;
+          ctx.clearRect(0, 0, width, height);
+          ctx.font = '800 ' + wordSize + 'px "Plus Jakarta Sans", system-ui, sans-serif';
+          ctx.textBaseline = 'middle';
+          var letterWidths = WORD.split('').map(function (letter) {
+            return ctx.measureText(letter).width;
+          });
+          var total = letterWidths.reduce(function (a, b) {
+            return a + b;
+          }, 0);
+          var x = (width - total) / 2;
+          for (var i = 0; i < WORD.length; i++) {
+            var locked = elapsed >= LOCK_START + i * LOCK_STEP;
+            var isDot = WORD.charAt(i) === '.';
+            ctx.fillStyle = locked ? (isDot ? COLORS.accent : COLORS.fg) : COLORS.accent;
+            ctx.fillText(locked ? WORD.charAt(i) : randomGlyph(), x, height / 2);
+            x += letterWidths[i];
+          }
+        }
+
+        function drawRain(elapsed) {
+          // Lapisan latar semi-transparan membuat jejak karakter memudar (efek ekor).
+          ctx.fillStyle = 'rgba(' + COLORS.bg + ',0.22)';
+          ctx.fillRect(0, 0, width, height);
+          // Hujan ikut memudar saat kata hampir terbentuk.
+          ctx.globalAlpha = Math.max(0, 1 - elapsed / DURATION);
+          ctx.fillStyle = COLORS.accent;
+          ctx.font = '600 14px ui-monospace, Consolas, monospace';
+          for (var i = 0; i < columns; i++) {
+            var drop = drops[i];
+            ctx.fillText(randomGlyph(), i * CELL, drop.y);
+            drop.y += CELL * drop.speed;
+            if (drop.y > height) drop.y = -Math.random() * 80;
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        var started = performance.now();
+        var animationDone = reduced;
+
+        function frame(now) {
+          var elapsed = now - started;
+          drawRain(elapsed);
+          drawWord(elapsed);
+          if (elapsed < DURATION + 200) {
+            requestAnimationFrame(frame);
+          } else {
+            animationDone = true;
+            finishWhenReady();
+          }
+        }
+
+        function appIsVisible() {
+          return document.getElementById('root').childElementCount > 0;
+        }
+
+        function finishWhenReady() {
+          if (!animationDone) return;
+          if (!appIsVisible()) {
+            setTimeout(finishWhenReady, 50);
+            return;
+          }
+          splash.classList.add('is-done');
+          setTimeout(function () {
+            splash.remove();
+          }, 260);
+        }
+
+        if (reduced) {
+          drawWord(Infinity);
+          finishWhenReady();
+        } else {
+          requestAnimationFrame(frame);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
