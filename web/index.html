@@ -39,88 +39,96 @@
     </style>
   </head>
   <body>
-    <div id="splash" aria-hidden="true"><canvas></canvas><canvas></canvas></div>
+    <div id="splash" aria-hidden="true"><canvas></canvas></div>
     <div id="root"></div>
     <script>
       /**
-       * Splash "matrix" (~1,2 detik): hujan karakter berwarna aksen, lalu huruf di tengah
-       * teracak dan terkunci satu per satu membentuk "venu.". Splash baru hilang setelah
-       * animasi selesai DAN aplikasi React sudah tampil, sehingga tidak ada layar kosong.
+       * Splash "matrix" (~1 detik): efeknya hanya di dalam teks, latar tetap polos. Di setiap posisi
+       * huruf, karakter berwarna aksen terus berganti dengan jejak samar yang turun ke posisinya
+       * (satu kolom matrix kecil per huruf), lalu huruf terkunci satu per satu membentuk "venu.".
+       * Splash baru hilang setelah animasi selesai DAN aplikasi React sudah tampil.
        * Hormati prefers-reduced-motion: langsung tampilkan kata tanpa animasi.
        */
       (function () {
         var splash = document.getElementById('splash');
-        // Dua lapisan: hujan (berjejak) di bawah, kata di atas (dibersihkan tiap frame).
-        var canvases = splash.querySelectorAll('canvas');
-        var ctx = canvases[0].getContext('2d');
-        var wordCtx = canvases[1].getContext('2d');
+        var ctx = splash.querySelector('canvas').getContext('2d');
         var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var COLORS = dark
-          ? { bg: '21,20,18', fg: '#EEEAE3', accent: '#86C7A1' }
-          : { bg: '251,250,247', fg: '#1D1B17', accent: '#1F6B45' };
-        var GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#$%&*+=<>';
+        var COLORS = dark ? { fg: '#EEEAE3', accent: '#86C7A1' } : { fg: '#1D1B17', accent: '#1F6B45' };
+        // Huruf kecil & angka: lebarnya mirip huruf asli, jadi karakter acak tidak saling menimpa.
+        var GLYPHS = 'abcdeghknopqrsuvxyz0123456789';
+        var NARROW_GLYPHS = ':;,|!'; // untuk slot titik
         var WORD = 'venu.';
-        var DURATION = 950; // hujan + penguncian huruf
-        var LOCK_START = 300;
-        var LOCK_STEP = 120;
-        var CELL = 16;
+        var LOCK_START = 250; // huruf pertama terkunci
+        var LOCK_STEP = 110; // jeda antarhuruf
+        var HOLD = 350; // kata utuh ditahan sebentar sebelum memudar
+        var DURATION = LOCK_START + (WORD.length - 1) * LOCK_STEP + HOLD;
+        var TICK = 55; // karakter berganti tiap 55 ms
+        var TRAIL = 2; // jumlah karakter samar di atas tiap huruf
+        var TRAIL_FADE = 180; // jejak memudar setelah huruf terkunci
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         var dpr = window.devicePixelRatio || 1;
         var width = window.innerWidth;
         var height = window.innerHeight;
-        [ctx, wordCtx].forEach(function (context) {
-          context.canvas.width = width * dpr;
-          context.canvas.height = height * dpr;
-          context.scale(dpr, dpr);
+        ctx.canvas.width = width * dpr;
+        ctx.canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+
+        var size = Math.min(96, Math.max(56, width * 0.14));
+        var step = size * 0.8; // jarak vertikal antarkarakter di kolom
+        ctx.font = '800 ' + size + 'px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Posisi tiap huruf dihitung dari kata akhirnya, jadi karakter acak tidak menggeser tata letak.
+        var widths = WORD.split('').map(function (letter) {
+          return ctx.measureText(letter).width;
+        });
+        var total = widths.reduce(function (a, b) {
+          return a + b;
+        }, 0);
+        var centers = [];
+        var x = (width - total) / 2;
+        widths.forEach(function (w) {
+          centers.push(x + w / 2);
+          x += w;
         });
 
-        var columns = Math.ceil(width / CELL);
-        var drops = [];
-        for (var i = 0; i < columns; i++) {
-          drops.push({ y: -Math.random() * height * 0.6, speed: 0.6 + Math.random() * 0.9 });
+        function glyph(slot, seed, tick) {
+          var set = WORD.charAt(slot) === '.' ? NARROW_GLYPHS : GLYPHS;
+          var n = Math.sin(seed * 127.1 + tick * 311.7 + slot * 74.7) * 43758.5453;
+          return set.charAt(Math.floor((n - Math.floor(n)) * set.length));
         }
-        var randomGlyph = function () {
-          return GLYPHS.charAt(Math.floor(Math.random() * GLYPHS.length));
-        };
-        var wordSize = Math.min(96, Math.max(56, width * 0.14));
 
-        function drawWord(elapsed) {
-          var ctx = wordCtx;
+        /** Karakter acak dipaskan ke lebar slot hurufnya (dipersempit bila lebih lebar). */
+        function fillFitted(text, slot, y) {
+          var scale = Math.min(1, widths[slot] / ctx.measureText(text).width);
+          ctx.save();
+          ctx.translate(centers[slot], y);
+          ctx.scale(scale, 1);
+          ctx.fillText(text, 0, 0);
+          ctx.restore();
+        }
+
+        function draw(elapsed) {
           ctx.clearRect(0, 0, width, height);
-          ctx.font = '800 ' + wordSize + 'px "Plus Jakarta Sans", system-ui, sans-serif';
-          ctx.textBaseline = 'middle';
-          var letterWidths = WORD.split('').map(function (letter) {
-            return ctx.measureText(letter).width;
-          });
-          var total = letterWidths.reduce(function (a, b) {
-            return a + b;
-          }, 0);
-          var x = (width - total) / 2;
+          var tick = Math.floor(elapsed / TICK);
+          var fall = (elapsed % TICK) / TICK; // jejak bergeser turun di antara pergantian karakter
+          var y = height / 2;
           for (var i = 0; i < WORD.length; i++) {
-            var locked = elapsed >= LOCK_START + i * LOCK_STEP;
-            var isDot = WORD.charAt(i) === '.';
-            ctx.fillStyle = locked ? (isDot ? COLORS.accent : COLORS.fg) : COLORS.accent;
-            ctx.fillText(locked ? WORD.charAt(i) : randomGlyph(), x, height / 2);
-            x += letterWidths[i];
+            var lockAt = LOCK_START + i * LOCK_STEP;
+            var locked = elapsed >= lockAt;
+            var trailAlpha = locked ? Math.max(0, 1 - (elapsed - lockAt) / TRAIL_FADE) : 1;
+            ctx.fillStyle = COLORS.accent;
+            for (var k = 1; k <= TRAIL && trailAlpha > 0; k++) {
+              ctx.globalAlpha = trailAlpha * 0.3 * (1 - k / (TRAIL + 1));
+              fillFitted(glyph(i, i * 7 + k, tick), i, y - (k - fall) * step);
+            }
+            ctx.globalAlpha = 1;
+            var letter = WORD.charAt(i);
+            ctx.fillStyle = locked && letter !== '.' ? COLORS.fg : COLORS.accent;
+            if (locked) ctx.fillText(letter, centers[i], y);
+            else fillFitted(glyph(i, i * 7, tick), i, y);
           }
-        }
-
-        function drawRain(elapsed) {
-          // Lapisan latar semi-transparan membuat jejak karakter memudar (efek ekor).
-          ctx.fillStyle = 'rgba(' + COLORS.bg + ',0.22)';
-          ctx.fillRect(0, 0, width, height);
-          // Hujan ikut memudar saat kata hampir terbentuk.
-          ctx.globalAlpha = Math.max(0, 1 - elapsed / DURATION);
-          ctx.fillStyle = COLORS.accent;
-          ctx.font = '600 14px ui-monospace, Consolas, monospace';
-          for (var i = 0; i < columns; i++) {
-            var drop = drops[i];
-            ctx.fillText(randomGlyph(), i * CELL, drop.y);
-            drop.y += CELL * drop.speed;
-            if (drop.y > height) drop.y = -Math.random() * 80;
-          }
-          ctx.globalAlpha = 1;
         }
 
         var started = performance.now();
@@ -128,9 +136,8 @@
 
         function frame(now) {
           var elapsed = now - started;
-          drawRain(elapsed);
-          drawWord(elapsed);
-          if (elapsed < DURATION + 200) {
+          draw(elapsed);
+          if (elapsed < DURATION) {
             requestAnimationFrame(frame);
           } else {
             animationDone = true;
@@ -155,7 +162,7 @@
         }
 
         if (reduced) {
-          drawWord(Infinity);
+          draw(Infinity);
           finishWhenReady();
         } else {
           requestAnimationFrame(frame);

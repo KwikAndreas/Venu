@@ -11,42 +11,40 @@ import {
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/theme/theme-context';
 
-const GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#$%&*+=<>';
+// Huruf kecil & angka: lebarnya mirip huruf asli, jadi karakter acak tidak saling menimpa.
+const GLYPHS = 'abcdeghknopqrsuvxyz0123456789';
+const NARROW_GLYPHS = ':;,|!'; // untuk slot titik
 const WORD = 'venu.';
-const RAIN_MS = 950;
-const DURATION_MS = RAIN_MS + 200;
-const LOCK_START_MS = 300;
-const LOCK_STEP_MS = 120;
+const LOCK_START_MS = 250; // huruf pertama terkunci
+const LOCK_STEP_MS = 110; // jeda antarhuruf
+const HOLD_MS = 350; // kata utuh ditahan sebentar sebelum memudar
+const DURATION_MS = LOCK_START_MS + (WORD.length - 1) * LOCK_STEP_MS + HOLD_MS;
 const FADE_MS = 250;
-/** Karakter berganti tiap 50 ms (cukup untuk kesan terminal, ringan untuk React Native). */
-const TICK_MS = 50;
-const CELL = 22;
-const TRAIL = 7;
+const TICK_MS = 55; // karakter berganti tiap 55 ms
+const TRAIL = 2; // jumlah karakter samar di atas tiap huruf
+const TRAIL_FADE_MS = 180; // jejak memudar setelah huruf terkunci
 
-/** Bilangan acak semu yang tetap untuk seed yang sama (posisi kolom tidak melompat). */
-function seeded(seed: number): number {
-  const x = Math.sin(seed * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-function glyph(seed: number, tick: number): string {
-  return GLYPHS.charAt(Math.floor(seeded(seed * 7919 + tick) * GLYPHS.length));
+function glyph(slot: number, seed: number, tick: number): string {
+  const set = WORD[slot] === '.' ? NARROW_GLYPHS : GLYPHS;
+  const x = Math.sin(seed * 127.1 + tick * 311.7 + slot * 74.7) * 43758.5453;
+  return set.charAt(Math.floor((x - Math.floor(x)) * set.length));
 }
 
 /**
- * Splash pembuka (~1,2 detik, sama dengan web/index.html dan versi Flutter): hujan karakter
- * berwarna aksen, lalu huruf di tengah teracak dan terkunci satu per satu membentuk "venu.".
- * Bila "kurangi gerakan" aktif di perangkat, kata langsung tampil tanpa hujan.
+ * Splash pembuka (~1 detik, sama dengan web/index.html): efeknya hanya di dalam teks, latar
+ * tetap polos. Di setiap posisi huruf, karakter berwarna aksen terus berganti dengan jejak samar
+ * yang turun ke posisinya, lalu huruf terkunci satu per satu membentuk "venu.".
+ * Bila "kurangi gerakan" aktif di perangkat, kata langsung tampil tanpa animasi.
  */
 export function MatrixSplash({ onFinished }: { onFinished: () => void }) {
   const { colors } = useTheme();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const [elapsed, setElapsed] = useState(0);
-  const [reduced, setReduced] = useState(false);
   const [opacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     let cancelled = false;
+    let frame = 0;
     const fadeOut = () =>
       Animated.timing(opacity, {
         toValue: 0,
@@ -54,84 +52,87 @@ export function MatrixSplash({ onFinished }: { onFinished: () => void }) {
         useNativeDriver: Platform.OS !== 'web',
       }).start(() => !cancelled && onFinished());
 
-    let timer: ReturnType<typeof setInterval> | undefined;
     AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
       if (cancelled) return;
       if (reduceMotion) {
-        setReduced(true);
         setElapsed(DURATION_MS);
         setTimeout(fadeOut, 400);
         return;
       }
       const start = Date.now();
-      timer = setInterval(() => {
+      const step = () => {
         const now = Date.now() - start;
         setElapsed(now);
-        if (now >= DURATION_MS) {
-          clearInterval(timer);
-          fadeOut();
-        }
-      }, TICK_MS);
+        if (now < DURATION_MS) frame = requestAnimationFrame(step);
+        else fadeOut();
+      };
+      frame = requestAnimationFrame(step);
     });
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      cancelAnimationFrame(frame);
     };
   }, [opacity, onFinished]);
 
+  const size = Math.min(96, Math.max(56, width * 0.14));
+  const lineHeight = size * 1.2;
+  const trailStep = size * 0.8;
   const tick = Math.floor(elapsed / TICK_MS);
-  const rainFade = reduced ? 0 : Math.max(0, 1 - elapsed / RAIN_MS);
-  const wordSize = Math.min(96, Math.max(56, width * 0.14));
-  const columns = Math.ceil(width / CELL);
-
-  const rain: { key: string; x: number; y: number; char: string; alpha: number }[] = [];
-  if (rainFade > 0) {
-    for (let column = 0; column < columns; column++) {
-      const speed = 0.35 + seeded(column + 1) * 0.5; // px per ms
-      const head = -seeded(column + 101) * height * 0.6 + elapsed * speed;
-      for (let step = 0; step < TRAIL; step++) {
-        const y = head - step * CELL;
-        if (y < -CELL || y > height) continue;
-        rain.push({
-          key: `${column}-${step}`,
-          x: column * CELL,
-          y,
-          char: glyph(column * 31 + step, tick),
-          alpha: rainFade * (1 - step / TRAIL),
-        });
-      }
-    }
-  }
+  const fall = (elapsed % TICK_MS) / TICK_MS; // jejak bergeser turun di antara pergantian karakter
+  const textStyle = { fontSize: size, lineHeight };
 
   return (
     <Animated.View
       pointerEvents="none"
       accessible={false}
       importantForAccessibility="no-hide-descendants"
-      style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg, opacity }]}
+      style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: colors.bg, opacity }]}
     >
-      {rain.map((drop) => (
-        <Text
-          key={drop.key}
-          style={[
-            styles.rain,
-            { left: drop.x, top: drop.y, color: colors.accent, opacity: drop.alpha },
-          ]}
-        >
-          {drop.char}
-        </Text>
-      ))}
-      <View style={styles.wordRow}>
-        {WORD.split('').map((letter, index) => {
-          const locked = elapsed >= LOCK_START_MS + index * LOCK_STEP_MS;
-          const color = !locked || letter === '.' ? colors.accent : colors.fg;
+      <View style={styles.row}>
+        {WORD.split('').map((letter, slot) => {
+          const lockAt = LOCK_START_MS + slot * LOCK_STEP_MS;
+          const locked = elapsed >= lockAt;
+          const trailAlpha = locked ? Math.max(0, 1 - (elapsed - lockAt) / TRAIL_FADE_MS) : 1;
           return (
-            <Text
-              key={index}
-              style={[styles.word, { fontSize: wordSize, lineHeight: wordSize * 1.2, color }]}
-            >
-              {locked ? letter : glyph(1000 + index, tick)}
-            </Text>
+            // Huruf akhir selalu dirender (tak terlihat sebelum terkunci) agar lebar slot tetap.
+            <View key={slot}>
+              <Text
+                style={[
+                  styles.letter,
+                  textStyle,
+                  { color: letter === '.' ? colors.accent : colors.fg, opacity: locked ? 1 : 0 },
+                ]}
+              >
+                {letter}
+              </Text>
+              {Array.from({ length: TRAIL }, (_, index) => index + 1).map((k) => (
+                <View key={k} style={[styles.overlay, { top: -(k - fall) * trailStep }]}>
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.letter,
+                      textStyle,
+                      {
+                        color: colors.accent,
+                        opacity: trailAlpha * 0.3 * (1 - k / (TRAIL + 1)),
+                      },
+                    ]}
+                  >
+                    {glyph(slot, slot * 7 + k, tick)}
+                  </Text>
+                </View>
+              ))}
+              {!locked && (
+                <View style={styles.overlay}>
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.letter, textStyle, { color: colors.accent }]}
+                  >
+                    {glyph(slot, slot * 7, tick)}
+                  </Text>
+                </View>
+              )}
+            </View>
           );
         })}
       </View>
@@ -140,21 +141,9 @@ export function MatrixSplash({ onFinished }: { onFinished: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  rain: {
-    position: 'absolute',
-    fontFamily: 'monospace',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  wordRow: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  word: { fontFamily: Fonts.extrabold, letterSpacing: -1 },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row' },
+  letter: { fontFamily: Fonts.extrabold, letterSpacing: -1, textAlign: 'center' },
+  // Karakter acak ditumpuk di tengah slot huruf (View, karena Text absolut mengabaikan `right`).
+  overlay: { position: 'absolute', left: -20, right: -20, top: 0, alignItems: 'center' },
 });

@@ -115,7 +115,6 @@ Venu/
 │       ├── components/      ui/ (Button, TextField, StatusBadge, …), venue/, booking/
 │       ├── constants/       theme.ts: token warna/tipe/jarak dari DESIGN.md
 │       └── lib/             Klien API, SecureStore, format & aturan (salinan dari web/src/lib)
-├── mobile2/                 Eksperimen: aplikasi penyewa yang sama dengan Flutter (lihat mobile2/README.md)
 ├── docs/                    Laporan dan bukti pengujian
 ├── TASK.md
 ├── DESIGN.md
@@ -299,17 +298,12 @@ npx expo start --clear  # bila tampilan tidak ikut berubah setelah kode diedit
 
 Isi `EXPO_PUBLIC_SECURITY_MODE` di `mobile/.env` sama dengan `SECURITY_MODE` backend. Mode before menampilkan pita peringatan dan meneruskan pesan error login asli dari API (celah A07, sama seperti web). Token login disimpan di **SecureStore** (Keystore/Keychain), bukan teks biasa.
 
-### Versi Flutter (eksperimen pembanding)
-
-Folder [`mobile2/`](mobile2/README.md) berisi aplikasi penyewa yang sama, dibuat dengan Flutter dan
-design system Venu (tanpa tampilan Material/Cupertino), untuk membandingkan Expo dan Flutter.
-Cara menjalankannya ada di [mobile2/README.md](mobile2/README.md).
-
 ### Splash pembuka
 
-Web, Expo, dan Flutter sama-sama membuka dengan animasi singkat (~1,2 detik): hujan karakter
-berwarna aksen, lalu huruf terkunci satu per satu membentuk `venu.`. Animasi dilewati bila
-perangkat meminta gerakan dikurangi (*reduced motion*).
+Web dan aplikasi mobile sama-sama membuka dengan animasi singkat (~1 detik) yang terjadi **di dalam
+teks**, dengan latar polos: tiap posisi huruf menampilkan karakter acak berwarna aksen yang berganti
+cepat dengan jejak samar yang turun ke posisinya, lalu huruf terkunci satu per satu membentuk
+`venu.`. Animasi dilewati bila perangkat meminta gerakan dikurangi (*reduced motion*).
 
 ### Skrip npm (folder `mobile`)
 
