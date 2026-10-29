@@ -93,6 +93,11 @@ export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Admin',
 };
 
+/** Judul tab booking: pemilik melihat booking yang masuk, peran lain booking miliknya. */
+export function bookingsTabTitle(role: Role | undefined): string {
+  return role === 'pemilik' ? 'Booking masuk' : 'Booking saya';
+}
+
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   transfer: 'Transfer bank',
   e_wallet: 'E-wallet',

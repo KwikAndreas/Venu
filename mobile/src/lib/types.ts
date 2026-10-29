@@ -73,6 +73,16 @@ export type BookingSummary = Booking & {
   payment_metode: PaymentMethod | null;
 };
 
+export type OwnerBooking = Booking & {
+  venue_nama: string;
+  penyewa_nama: string;
+  penyewa_email: string;
+  payment_id: number | null;
+  payment_status: PaymentStatus | null;
+  payment_metode: PaymentMethod | null;
+  ada_bukti: boolean;
+};
+
 export type Payment = {
   id: number;
   booking_id: number;

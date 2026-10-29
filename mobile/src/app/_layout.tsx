@@ -59,6 +59,7 @@ function AppNavigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="venue/[id]" options={{ title: '' }} />
         <Stack.Screen name="booking/[id]" options={{ title: 'Selesaikan pemesanan' }} />
+        <Stack.Screen name="payment/[id]" options={{ title: 'Bukti bayar' }} />
         <Stack.Screen name="login" options={{ title: 'Masuk', presentation: 'modal' }} />
         <Stack.Screen name="register" options={{ title: 'Daftar', presentation: 'modal' }} />
       </Stack>

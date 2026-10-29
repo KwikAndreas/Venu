@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router';
 import { CalendarDays, Search, UserRound } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/auth/auth-context';
 import { Fonts } from '@/constants/theme';
 import { useActiveBookings } from '@/bookings/active-bookings-context';
+import { bookingsTabTitle } from '@/lib/format';
 import { useTheme } from '@/theme/theme-context';
 
 /** Tinggi isi tab bar (ikon + label). Ruang home indicator/navigasi sistem ditambahkan di atasnya. */
@@ -11,7 +13,9 @@ const TAB_BAR_PADDING = 4;
 
 export default function TabLayout() {
   const { colors } = useTheme();
-  const { active } = useActiveBookings();
+  const { user } = useAuth();
+  const { active, toConfirm } = useActiveBookings();
+  const badge = user?.role === 'pemilik' ? toConfirm : active.length;
   const insets = useSafeAreaInsets();
 
   return (
@@ -46,8 +50,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Booking saya',
-          tabBarBadge: active.length > 0 ? active.length : undefined,
+          title: bookingsTabTitle(user?.role),
+          tabBarBadge: badge > 0 ? badge : undefined,
           tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size - 2} />,
         }}
       />
