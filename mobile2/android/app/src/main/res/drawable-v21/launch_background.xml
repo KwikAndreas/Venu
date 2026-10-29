@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layar peluncuran Android: hanya warna latar Venu. Animasi "venu." digambar oleh Flutter
+     (lib/ui/matrix_splash.dart) begitu mesin Flutter siap. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/venu_bg" />
+</layer-list>
