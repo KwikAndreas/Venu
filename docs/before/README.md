@@ -14,7 +14,7 @@
 | Tanggal uji | 2026-11-16 |
 | Alat | `curl` (otomatis, lihat `raw/transcript.txt`), `npm audit`, server "canary" untuk SSRF. OWASP ZAP & Semgrep: lihat §4. |
 
-Seluruh langkah otomatis dijalankan ulang oleh skrip harness dan tercatat lengkap di **[`raw/transcript.txt`](raw/transcript.txt)**. Data uji (akun `sectest-*`) dibuat saat pengujian lalu **dihapus** setelahnya, sehingga database kembali bersih.
+Panduan langkah demi langkah untuk **mereproduksi** pengujian ini (termasuk memakai **Kali Linux**: `sqlmap`, `nikto`, Wireshark, `jwt_tool`, dll.) ada di [`../panduan-pengujian.md`](../panduan-pengujian.md). Seluruh langkah otomatis dijalankan ulang oleh skrip harness dan tercatat lengkap di **[`raw/transcript.txt`](raw/transcript.txt)**. Data uji (akun `sectest-*`) dibuat saat pengujian lalu **dihapus** setelahnya, sehingga database kembali bersih.
 
 ## 2. Ringkasan temuan (10/10 kategori rentan)
 

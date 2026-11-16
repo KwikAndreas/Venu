@@ -87,6 +87,7 @@ Venu berhasil menunjukkan perbedaan nyata antara aplikasi tanpa dan dengan *Secu
 ## 8. Lampiran
 
 - Proses SAD lengkap: [`sad-process.md`](sad-process.md)
+- Panduan reproduksi pengujian (Windows & Kali Linux): [`panduan-pengujian.md`](panduan-pengujian.md)
 - Bukti Before: [`before/`](before/) (termasuk `raw/transcript.txt`, `raw/npm-audit-before.txt`, `raw/ssrf-canary-hits.txt`)
 - Bukti After: [`after/`](after/) (termasuk `raw/transcript.txt`)
 - Katalog celah & penanda kode: `TASK.md` §7 dan `backend/DEPS-A03.md`
