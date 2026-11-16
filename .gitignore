@@ -22,3 +22,7 @@ Thumbs.db
 
 # Collaboration
 changes/
+
+# Dokumen kerja lokal (jangan di-commit)
+TASK.md
+DESIGN.md
