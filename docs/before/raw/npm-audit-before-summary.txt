@@ -1,0 +1,2 @@
+vuln: {"info":0,"low":0,"moderate":9,"high":0,"critical":2,"total":11}
+critical pkgs: lodash, minimist

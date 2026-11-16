@@ -1,0 +1,107 @@
+## MODE=before  BASE=http://127.0.0.1:4000  tanggal=2026-11-16
+Banner server (3 baris pertama):
+(node:24520) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Venu API berjalan di http://127.0.0.1:4000 — mode BEFORE
+
+============================================================
+SETUP akun & lapangan uji
+============================================================
+-> HTTP 201  body: {"user":{"id":48,"nama":"Owner Uji","email":"sectest-before-owner@venu.test","role":"pemilik","created_at":"2026-11-16T09:49:41.107Z"}}
+-> HTTP 201  body: {"user":{"id":49,"nama":"Penyewa A","email":"sectest-before-a@venu.test","role":"penyewa","created_at":"2026-11-16T09:49:41.848Z"}}
+-> HTTP 201  body: {"user":{"id":50,"nama":"Penyewa B","email":"sectest-before-b@venu.test","role":"penyewa","created_at":"2026-11-16T09:49:42.478Z"}}
+-> HTTP 201  body: {"venue":{"id":15,"owner_id":48,"nama":"Lapangan Uji before","jenis_olahraga":"futsal","alamat":"Jl Uji 1","kota":"Jakarta","harga_per_jam":100000,"jam_buka":"08:00","jam_tutup":"22:00","fasilitas":[],"foto_url":null,"deskripsi":null,"created_at":"2026-11-16T09:49:42.982Z","rating_rata":null,"jumlah_ulasan":0}}
+TOK_OWN set? ya | A_ID=49 | VEN=15
+
+============================================================
+A01 Broken Access Control
+============================================================
+[A01.1] Registrasi sebagai admin (privilege escalation lewat field role):
+-> HTTP 201  body: {"user":{"id":51,"nama":"Jahat","email":"sectest-before-admin@venu.test","role":"admin","created_at":"2026-11-16T09:49:43.698Z"}}
+    -> role hasil: admin  (before: admin = TEMBUS | after: 400 ditolak)
+    booking A id=40, payment id=18
+[A01.2] IDOR baca booking orang lain: Penyewa B GET /bookings/40
+-> HTTP 200  body: {"booking":{"id":40,"user_id":49,"venue_id":15,"tanggal":"2026-11-17","jam_mulai":"08:00","jam_selesai":"09:00","status":"menunggu","total_harga":1,"created_at":"2026-11-16T09:49:44.168Z","venue_nama":"Lapangan Uji before","venue_kota":"Jakarta","jenis_olahraga":"futsal","harga_per_jam":100000,"payment_id":18,"payment_status":"menunggu","payment_metode":"transfer"}}
+    -> before: 200 (bocor) | after: 404
+[A01.3] IDOR unduh bukti bayar orang lain: Penyewa B GET /payments/18/proof
+-> HTTP 200  ukuran: 70 byte  (before: 200+file | after: 403/404)
+[A01.4] SSRF: Owner POST /venues/15/photo-url {url -> layanan internal canary}
+-> HTTP 200  body: {"venue":{"id":15,"owner_id":48,"nama":"Lapangan Uji before","jenis_olahraga":"futsal","alamat":"Jl Uji 1","kota":"Jakarta","harga_per_jam":100000,"jam_buka":"08:00","jam_tutup":"22:00","fasilitas":[],"foto_url":"/uploads/venues/5bce2f69-4097-49c7-a203-84f26c20666e.bin","deskripsi":null,"created_at":"2026-11-16T09:49:42.982Z","rating_rata":null,"jumlah_ulasan":0}}
+    canary hits: 1 baris  (before: >=1 = SSRF terbukti | after: 0)
+
+============================================================
+A02 Security Misconfiguration
+============================================================
+[A02.1] Header respons (X-Powered-By, helmet/CSP, CORS) dari GET /ping:
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+[A02.2] Stack trace bocor: GET /tidak-ada (404):
+-> HTTP 404  ada field 'stack'? YA-BOCOR
+    body: {"message":"Endpoint GET /tidak-ada-23734 tidak ditemukan","stack":"HttpError: Endpoint GET /tidak-ada-23734 tidak ditemukan\n    at notFoundHandler (file:///D:/Sekolah/UBM/Mata%20kuliah/Semester%207/UAS/Secure%20Application%20Development/Venu/backend/src/middleware/error-handler.ts:41:9)\n    at La
+
+============================================================
+A05 Injection (SQL Injection di pencarian lapangan)
+============================================================
+[A05.0] /venues tanpa filter (baseline) -> 10 lapangan
+[A05.1] q=kata-yang-pasti-tak-cocok -> jumlah hasil: 0  (harus 0 di kedua mode)
+[A05.2] q=' OR '1'='1' --  (boolean bypass) -> jumlah hasil: 10  (before: 10 = SEMUA baris lolos filter | after: 0)
+[A05.3] q=' (petik tunggal, error-based) -> HTTP 500  body: {"message":"unterminated quoted string at or near \"' ORDER BY v.created_at DESC, v.id\"","stack":"error: unterminated quoted string at or near \"' ORDER BY v.created_at DESC, v.id\"\n    at D:\\Sekolah\\UBM\\Mata kuliah\\Semester 7\\UAS\\S
+    (before: 500 + pesan/stack SQL bocor = injectable | after: 200, input diperlakukan sebagai data literal)
+
+============================================================
+A06 Insecure Design
+============================================================
+[A06.1] Harga dikirim klien total_harga=1 untuk slot Rp100.000 -> total tersimpan: 1  (before: 1 | after: 100000)
+[A06.2] Double booking slot sama (08:00-09:00) oleh Penyewa B:
+-> HTTP 201  body: {"booking":{"id":41,"user_id":50,"venue_id":15,"tanggal":"2026-11-17","jam_mulai":"08:00","jam_selesai":"09:00","status":"menunggu","total_harga":100000,"created_at":"2026-11-16T09:49:49.992Z"}}
+    -> before: 201 (slot dobel) | after: 409 (ditolak)
+
+============================================================
+A07 Authentication Failures
+============================================================
+[A07.1] Enumerasi: login email TIDAK terdaftar:
+-> HTTP 404  pesan: Email tidak terdaftar
+[A07.2] Enumerasi: login email terdaftar, password SALAH:
+-> HTTP 401  pesan: Password salah
+    (before: 404 'Email tidak terdaftar' vs 401 'Password salah' = bocor | after: dua-duanya 401 'Email atau password salah')
+[A07.3] Kebijakan password: registrasi dengan password lemah '123':
+-> HTTP 201  {"user":{"id":52,"nama":"Lemah","email":"sectest-before-weak@venu.test","role":"penyewa","created_at":"2026-11-16T09:49:51.452Z"}}  (before: 201 diterima | after: 400 ditolak)
+[A07.4] Token JWT — payload (cek klaim 'exp'):
+{"role":"penyewa","iat":1794822576,"sub":"49"}  exp? TIDAK ADA (berlaku selamanya)
+[A07.5] Logout tidak mencabut token: login baru -> logout -> GET /me pakai token lama:
+    logout: HTTP 200
+-> GET /me setelah logout: HTTP 200  (before: 200 token masih sah | after: 401 token dicabut)
+
+============================================================
+A08 Software/Data Integrity Failures (upload tak terverifikasi)
+============================================================
+[A08.1] Upload evil.html (HTML) menyamar sebagai image/png -> HTTP 200
+    foto_url: /uploads/venues/evil.html  (before: diterima, ekstensi .html, nama asli | after: 400 ditolak)
+    GET /uploads/venues/evil.html -> HTTP 200  isi: <html><script>alert(document.cookie)</script><h1>pwned</h1></html>
+
+============================================================
+A10 Mishandling of Exceptional Conditions (konfirmasi fail-open)
+============================================================
+[A10.1] Owner konfirmasi booking id=42 yang BELUM dibayar:
+-> HTTP 200  body: {"booking":{"id":42,"user_id":49,"venue_id":15,"tanggal":"2026-11-17","jam_mulai":"10:00","jam_selesai":"11:00","status":"dikonfirmasi","total_harga":100000,"created_at":"2026-11-16T09:49:53.667Z"}}
+    -> before: 200/dikonfirmasi tanpa bukti bayar (fail open) | after: 409 ditolak (fail secure)
+    status booking sekarang: dikonfirmasi
+
+============================================================
+A09 Security Logging & Alerting Failures
+============================================================
+[A09] login gagal (sengaja) dilakukan. HTTP 401
+    audit_logs sebelum=93 sesudah=93 (delta=0)  (before: 0 = tak tercatat | after: >=1 tercatat)
+
+============================================================
+A04 Cryptographic Failures (penyimpanan password)
+============================================================
+[A04] password_hash milik sectest-before-a@venu.test:
+    33b2e7f44f3c403ba522549936ddf2f9
+    panjang=32  (before: 32 hex MD5 tanpa salt | after: $2b$ bcrypt)
+    (A04 juga: server berjalan HTTP polos tanpa HTTPS -> sniffable di Wireshark)
+
+============================================================
+SELESAI mode before
+============================================================
+Server & canary dihentikan.

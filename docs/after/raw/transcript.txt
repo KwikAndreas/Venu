@@ -1,0 +1,108 @@
+## MODE=after  BASE=http://127.0.0.1:4000  tanggal=2026-11-16
+Banner server (3 baris pertama):
+(node:10012) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Venu API berjalan di http://127.0.0.1:4000 — mode AFTER
+
+============================================================
+SETUP akun & lapangan uji
+============================================================
+-> HTTP 201  body: {"user":{"id":53,"nama":"Owner Uji","email":"sectest-after-owner@venu.test","role":"pemilik","created_at":"2026-11-16T09:50:02.643Z"}}
+-> HTTP 201  body: {"user":{"id":54,"nama":"Penyewa A","email":"sectest-after-a@venu.test","role":"penyewa","created_at":"2026-11-16T09:50:04.182Z"}}
+-> HTTP 201  body: {"user":{"id":55,"nama":"Penyewa B","email":"sectest-after-b@venu.test","role":"penyewa","created_at":"2026-11-16T09:50:05.473Z"}}
+-> HTTP 201  body: {"venue":{"id":16,"owner_id":53,"nama":"Lapangan Uji after","jenis_olahraga":"futsal","alamat":"Jl Uji 1","kota":"Jakarta","harga_per_jam":100000,"jam_buka":"08:00","jam_tutup":"22:00","fasilitas":[],"foto_url":null,"deskripsi":null,"created_at":"2026-11-16T09:50:06.373Z","rating_rata":null,"jumlah_ulasan":0}}
+TOK_OWN set? ya | A_ID=54 | VEN=16
+
+============================================================
+A01 Broken Access Control
+============================================================
+[A01.1] Registrasi sebagai admin (privilege escalation lewat field role):
+-> HTTP 400  body: {"message":"Peran harus \"penyewa\" atau \"pemilik\""}
+    -> role hasil:   (before: admin = TEMBUS | after: 400 ditolak)
+    booking A id=43, payment id=19
+[A01.2] IDOR baca booking orang lain: Penyewa B GET /bookings/43
+-> HTTP 404  body: {"message":"Booking tidak ditemukan"}
+    -> before: 200 (bocor) | after: 404
+[A01.3] IDOR unduh bukti bayar orang lain: Penyewa B GET /payments/19/proof
+-> HTTP 404  ukuran: 41 byte  (before: 200+file | after: 403/404)
+[A01.4] SSRF: Owner POST /venues/16/photo-url {url -> layanan internal canary}
+-> HTTP 400  body: {"message":"Tujuan URL tidak diizinkan"}
+    canary hits: 0 baris  (before: >=1 = SSRF terbukti | after: 0)
+
+============================================================
+A02 Security Misconfiguration
+============================================================
+[A02.1] Header respons (X-Powered-By, helmet/CSP, CORS) dari GET /ping:
+Content-Security-Policy: default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+[A02.2] Stack trace bocor: GET /tidak-ada (404):
+-> HTTP 404  ada field 'stack'? tidak
+    body: {"message":"Endpoint GET /tidak-ada-27723 tidak ditemukan"}
+
+============================================================
+A05 Injection (SQL Injection di pencarian lapangan)
+============================================================
+[A05.0] /venues tanpa filter (baseline) -> 11 lapangan
+[A05.1] q=kata-yang-pasti-tak-cocok -> jumlah hasil: 0  (harus 0 di kedua mode)
+[A05.2] q=' OR '1'='1' --  (boolean bypass) -> jumlah hasil: 0  (before: 11 = SEMUA baris lolos filter | after: 0)
+[A05.3] q=' (petik tunggal, error-based) -> HTTP 200  body: {"venues":[]}
+    (before: 500 + pesan/stack SQL bocor = injectable | after: 200, input diperlakukan sebagai data literal)
+
+============================================================
+A06 Insecure Design
+============================================================
+[A06.1] Harga dikirim klien total_harga=1 untuk slot Rp100.000 -> total tersimpan: 100000  (before: 1 | after: 100000)
+[A06.2] Double booking slot sama (08:00-09:00) oleh Penyewa B:
+-> HTTP 409  body: {"message":"Slot sudah dibooking orang lain"}
+    -> before: 201 (slot dobel) | after: 409 (ditolak)
+
+============================================================
+A07 Authentication Failures
+============================================================
+[A07.1] Enumerasi: login email TIDAK terdaftar:
+-> HTTP 401  pesan: Email atau password salah
+[A07.2] Enumerasi: login email terdaftar, password SALAH:
+-> HTTP 401  pesan: Email atau password salah
+    (before: 404 'Email tidak terdaftar' vs 401 'Password salah' = bocor | after: dua-duanya 401 'Email atau password salah')
+[A07.3] Kebijakan password: registrasi dengan password lemah '123':
+-> HTTP 400  {"message":"Password minimal 8 karakter"}  (before: 201 diterima | after: 400 ditolak)
+[A07.4] Token JWT — payload (cek klaim 'exp'):
+{"role":"penyewa","iat":1794822599,"exp":1794829799,"sub":"54","jti":"a510fc00-c89d-49f0-aafb-8af14b7557ec"}  exp? ADA (kedaluwarsa)
+[A07.5] Logout tidak mencabut token: login baru -> logout -> GET /me pakai token lama:
+    logout: HTTP 200
+-> GET /me setelah logout: HTTP 401  (before: 200 token masih sah | after: 401 token dicabut)
+
+============================================================
+A08 Software/Data Integrity Failures (upload tak terverifikasi)
+============================================================
+[A08.1] Upload evil.html (HTML) menyamar sebagai image/png -> HTTP 400
+    foto_url:   (before: diterima, ekstensi .html, nama asli | after: 400 ditolak)
+
+============================================================
+A10 Mishandling of Exceptional Conditions (konfirmasi fail-open)
+============================================================
+[A10.1] Owner konfirmasi booking id=44 yang BELUM dibayar:
+-> HTTP 409  body: {"message":"Penyewa belum mengirim bukti bayar"}
+    -> before: 200/dikonfirmasi tanpa bukti bayar (fail open) | after: 409 ditolak (fail secure)
+    status booking sekarang: menunggu
+
+============================================================
+A09 Security Logging & Alerting Failures
+============================================================
+[A09] login gagal (sengaja) dilakukan. HTTP 401
+    audit_logs sebelum=102 sesudah=103 (delta=1)  (before: 0 = tak tercatat | after: >=1 tercatat)
+
+============================================================
+A04 Cryptographic Failures (penyimpanan password)
+============================================================
+[A04] password_hash milik sectest-after-a@venu.test:
+    $2b$12$uYG8.1EVz0ILJI9VER88YOcOi4V3tEWERAv2/7Rj2HdZWG9sK6b0K
+    panjang=60  (before: 32 hex MD5 tanpa salt | after: $2b$ bcrypt)
+    (A04 juga: server berjalan HTTP polos tanpa HTTPS -> sniffable di Wireshark)
+
+============================================================
+SELESAI mode after
+============================================================
+Server & canary dihentikan.
